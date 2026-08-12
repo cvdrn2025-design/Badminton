@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Turnamen Bulu Tangkis</title>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background: #f0f4f8;
+      min-height: 100vh;
+    }
+
+    /* ========== HEADER ========== */
+    .hero-header {
+      width: 100%;
+      min-height: 200px;
+      background: 
+        radial-gradient(100% 100% at 50% 0%, #a80f14 50%, transparent 50.5%),
+        radial-gradient(100% 100% at 0% 100%, #a80f14 50%, #f4f4f4 50.5%);
+      background-blend-mode: multiply;
+      background-color: #f4f4f4;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      padding: 24px 20px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+      position: relative;
+    }
+
+    /* Gambar dengan efek fade di pinggir */
+    .header-logo {
+      width: 100px;
+      height: auto;
+      border-radius: 50%; /* Bentuk lingkaran agar fade lebih halus */
+      /* Efek fade: bagian tengah pekat, pinggir transparan */
+      -webkit-mask-image: radial-gradient(circle at center, black 50%, transparent 100%);
+      mask-image: radial-gradient(circle at center, black 50%, transparent 100%);
+      /* Bayangan mengikuti bentuk transparan */
+      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
+      z-index: 2;
+      margin-bottom: 4px;
+    }
+
+    .logo-area {
+      color: #ffffff;
+      text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+      text-align: center;
+      z-index: 2;
+    }
+
+    .logo-area h1 {
+      font-size: 2rem;
+      font-weight: bold;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+
+    .logo-area .event-info {
+      font-size: 1rem;
+      opacity: 0.95;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    .nav-menu {
+      display: flex;
+      gap: 10px;
+      list-style: none;
+      background: rgba(255, 255, 255, 0.92);
+      padding: 8px 16px;
+      border-radius: 30px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      z-index: 2;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .nav-menu .tab-btn {
+      background: transparent;
+      border: none;
+      color: #333;
+      font-weight: 600;
+      font-size: 14px;
+      padding: 10px 14px;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all 0.3s;
+      white-space: nowrap;
+    }
+
+    .nav-menu .tab-btn:hover {
+      background: rgba(168, 15, 20, 0.1);
+      color: #a80f14;
+    }
+
+    .nav-menu .tab-btn.active {
+      background: linear-gradient(to bottom, #dc2626 80%, #ffffff 100%);
+      color: white;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+      box-shadow: 0 3px 8px rgba(168,15,20,0.4);
+    }
+
+    /* ========== KONTEN UTAMA ========== */
+    .container {
+      max-width: 1000px;
+      margin: -30px auto 30px;
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+      padding: 24px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    .card {
+      background: #f8fafc;
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 20px;
+      border: 1px solid #e2e8f0;
+    }
+
+    /* ===== TOMBOL GRADASI BARU (merah ke bawah 80% merah, 20% putih) ===== */
+    button.action-btn,
+    .match-item button,
+    .bracket-match button,
+    #genKnockoutBtn,
+    #exportExcelBtn,
+    #generateGroupsBtn,
+    #saveEventInfo,
+    #addPlayerBtn {
+      background: linear-gradient(to bottom, #dc2626 80%, #ffffff 100%);
+      color: #fff;
+      border: none;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.2s;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+      box-shadow: 0 4px 10px rgba(220,38,38,0.3);
+      border-radius: 12px;
+    }
+
+    button.action-btn:hover,
+    .match-item button:hover,
+    .bracket-match button:hover,
+    #genKnockoutBtn:hover,
+    #exportExcelBtn:hover,
+    #generateGroupsBtn:hover,
+    #saveEventInfo:hover,
+    #addPlayerBtn:hover {
+      background: linear-gradient(to bottom, #b91c1c 80%, #f8f8f8 100%);
+      box-shadow: 0 6px 14px rgba(220,38,38,0.45);
+      transform: translateY(-1px);
+    }
+
+    .input-group {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .input-group input {
+      flex: 1 1 200px;
+      padding: 10px 16px;
+      border: 2px solid #cbd5e1;
+      border-radius: 12px;
+      font-size: 1rem;
+    }
+
+    .input-group button {
+      padding: 10px 24px;
+      white-space: nowrap;
+    }
+
+    .list {
+      list-style: none;
+      padding: 0;
+      margin-top: 12px;
+    }
+
+    .list li {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      padding: 8px 12px;
+      background: white;
+      border-radius: 10px;
+      margin-bottom: 6px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+    }
+
+    .list li .player-details {
+      display: flex;
+      gap: 16px;
+      font-size: 0.9rem;
+      color: #475569;
+    }
+
+    .group-box {
+      background: white;
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 16px;
+      border-left: 4px solid #dc2626;
+    }
+
+    .match-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .match-item button {
+      padding: 6px 14px;
+      font-size: 0.9rem;
+    }
+
+    .scoreboard { text-align: center; }
+    .players {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      margin: 20px 0;
+    }
+
+    .player { font-size: 1.4rem; font-weight: bold; }
+
+    .points {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      margin: 20px 0;
+    }
+
+    .point-btn {
+      font-size: 2rem;
+      padding: 10px 24px;
+      border: 2px solid #94a3b8;
+      border-radius: 16px;
+      background: #f1f5f9;
+      cursor: pointer;
+      transition: 0.1s;
+      color: #1e293b;
+    }
+
+    .point-btn:active {
+      background: linear-gradient(to bottom, #dc2626 80%, #ffffff 100%);
+      color: white;
+      border-color: #dc2626;
+    }
+
+    .game-status { font-size: 1.2rem; margin: 12px 0; }
+    .bracket {
+      display: flex;
+      gap: 16px;
+      overflow-x: auto;
+      padding: 20px 0;
+    }
+
+    .round {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-around;
+      gap: 30px;
+      min-width: 180px;
+    }
+
+    .bracket-match {
+      background: white;
+      border: 1px solid #cbd5e1;
+      border-radius: 12px;
+      padding: 10px;
+      text-align: center;
+    }
+
+    .bracket-match button {
+      margin-top: 8px;
+      padding: 6px 12px;
+    }
+
+    .standings-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0;
+    }
+    .standings-table th, .standings-table td {
+      padding: 8px;
+      border-bottom: 1px solid #e2e8f0;
+      text-align: center;
+    }
+
+    .winner {
+      font-size: 1.6rem;
+      font-weight: bold;
+      color: #0f766e;
+    }
+
+    @media (max-width: 768px) {
+      .hero-header {
+        padding: 20px 15px;
+      }
+      .logo-area h1 {
+        font-size: 1.5rem;
+      }
+      .nav-menu .tab-btn {
+        font-size: 12px;
+        padding: 8px 10px;
+      }
+      .header-logo {
+        width: 70px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="hero-header">
+    <!-- Gambar dengan efek fade di pinggir -->
+    <img src="17865337300642.png" alt="Logo Turnamen" class="header-logo" onerror="this.style.display='none'">
+
+    <div class="logo-area">
+      <h1>🏸 Turnamen Bulu Tangkis</h1>
+      <div id="eventHeader" class="event-info"></div>
+    </div>
+    <nav>
+      <div class="nav-menu">
+        <button class="tab-btn active" data-tab="registration">📋 Pendaftaran</button>
+        <button class="tab-btn" data-tab="groups">👥 Grup & Bagan</button>
+        <button class="tab-btn" data-tab="scoreboard">🖥️ Papan Skor</button>
+        <button class="tab-btn" data-tab="results">🏆 Hasil</button>
+      </div>
+    </nav>
+  </header>
+
+  <div class="container">
+    <!-- Tab Pendaftaran -->
+    <div id="tab-registration" class="tab-content active">
+      <div class="card">
+        <h2>Informasi Event</h2>
+        <div class="input-group">
+          <input type="text" id="eventName" placeholder="Nama Event">
+          <input type="text" id="eventOrganizer" placeholder="Penyelenggara">
+          <input type="text" id="eventLocation" placeholder="Lokasi">
+          <button class="action-btn" id="saveEventInfo">Simpan Info</button>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Daftar Peserta</h2>
+        <div class="input-group">
+          <input type="text" id="playerName" placeholder="Nama peserta">
+          <input type="text" id="playerPhone" placeholder="No Telepon/WA">
+          <input type="text" id="playerAddress" placeholder="Alamat">
+          <button class="action-btn" id="addPlayerBtn">Daftar</button>
+        </div>
+        <div style="display: flex; gap: 12px; margin-bottom: 16px;">
+          <button class="action-btn" id="exportExcelBtn">📥 Simpan Data Peserta (Excel)</button>
+        </div>
+        <ul id="playerList" class="list"></ul>
+      </div>
+    </div>
+
+    <!-- Tab Grup & Bagan -->
+    <div id="tab-groups" class="tab-content">
+      <div class="card">
+        <h2>Pembagian Grup & Pertandingan</h2>
+        <button class="action-btn" id="generateGroupsBtn" style="margin-bottom:16px; padding:10px 24px;">Acak Grup</button>
+        <div id="groupContainer"></div>
+        <div id="knockoutSection" style="margin-top:24px;"></div>
+      </div>
+    </div>
+
+    <!-- Tab Papan Skor -->
+    <div id="tab-scoreboard" class="tab-content">
+      <div class="card scoreboard">
+        <h2>Papan Skor</h2>
+        <div id="scoreBoardContent"><p>Pilih pertandingan dari tab Grup & Bagan.</p></div>
+      </div>
+    </div>
+
+    <!-- Tab Hasil -->
+    <div id="tab-results" class="tab-content">
+      <div class="card">
+        <h2>Hasil Turnamen</h2>
+        <div id="finalResults"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      let players = [];
+      let groups = [];
+      let groupMatches = [];
+      let knockoutMatches = [];
+      let currentMatch = null;
+      let currentGame = 0;
+      let matchType = null;
+      
+      let eventInfo = { name: '', organizer: '', location: '' };
+
+      function getPlayerName(id) {
+        const p = players.find(p => p.id === id);
+        return p ? p.name : '???';
+      }
+
+      function getPlayerDetails(id) {
+        const p = players.find(p => p.id === id);
+        if (!p) return '???';
+        let details = p.name;
+        if (p.phone) details += ` (📱 ${p.phone})`;
+        if (p.address) details += ` - ${p.address}`;
+        return details;
+      }
+
+      function isGameOver(p1, p2) {
+        if (p1 >= 30 || p2 >= 30) return true;
+        if ((p1 >= 21 || p2 >= 21) && Math.abs(p1 - p2) >= 2) return true;
+        return false;
+      }
+
+      function checkMatchFinished(match) {
+        const p1Wins = match.scores.filter(g => g.p1 > g.p2).length;
+        const p2Wins = match.scores.filter(g => g.p2 > g.p1).length;
+        if (p1Wins === 2) { match.winner = match.p1; match.finished = true; }
+        else if (p2Wins === 2) { match.winner = match.p2; match.finished = true; }
+      }
+
+      function getGroupStandings(groupIndex) {
+        const playersInGroup = groups[groupIndex].players;
+        let stats = {};
+        playersInGroup.forEach(pid => {
+          stats[pid] = { pid, wins:0, losses:0, gamesWon:0, gamesLost:0, pointsFor:0, pointsAgainst:0 };
+        });
+        groupMatches.filter(m => m.groupIndex === groupIndex && m.finished).forEach(m => {
+          const p1 = m.p1, p2 = m.p2;
+          const p1Wins = m.scores.filter(g => g.p1 > g.p2).length;
+          const p2Wins = m.scores.filter(g => g.p2 > g.p1).length;
+          if (p1Wins === 2) { stats[p1].wins++; stats[p2].losses++; }
+          else { stats[p2].wins++; stats[p1].losses++; }
+          stats[p1].gamesWon += p1Wins; stats[p1].gamesLost += p2Wins;
+          stats[p2].gamesWon += p2Wins; stats[p2].gamesLost += p1Wins;
+          m.scores.forEach(g => {
+            stats[p1].pointsFor += g.p1; stats[p1].pointsAgainst += g.p2;
+            stats[p2].pointsFor += g.p2; stats[p2].pointsAgainst += g.p1;
+          });
+        });
+        return Object.values(stats).sort((a,b) => {
+          if (b.wins !== a.wins) return b.wins - a.wins;
+          const gdA = a.gamesWon - a.gamesLost;
+          const gdB = b.gamesWon - b.gamesLost;
+          if (gdA !== gdB) return gdB - gdA;
+          const pdA = a.pointsFor - a.pointsAgainst;
+          const pdB = b.pointsFor - b.pointsAgainst;
+          return pdB - pdA;
+        });
+      }
+
+      function renderEventHeader() {
+        const header = document.getElementById('eventHeader');
+        const { name, organizer, location } = eventInfo;
+        let parts = [];
+        if (name) parts.push(`<span><strong>${name}</strong></span>`);
+        if (organizer) parts.push(`<span>📌 ${organizer}</span>`);
+        if (location) parts.push(`<span>📍 ${location}</span>`);
+        header.innerHTML = parts.join('');
+      }
+
+      function renderAll() {
+        renderEventHeader();
+        renderPlayerList();
+        renderGroupsAndMatches();
+        renderScoreboard();
+        renderResults();
+      }
+
+      function renderPlayerList() {
+        const ul = document.getElementById('playerList');
+        ul.innerHTML = players.map(p => {
+          return `<li><strong>${p.name}</strong><div class="player-details">${p.phone ? `<span>📱 ${p.phone}</span>` : ''}${p.address ? `<span>📍 ${p.address}</span>` : ''}</div></li>`;
+        }).join('');
+      }
+
+      function renderGroupsAndMatches() {
+        const container = document.getElementById('groupContainer');
+        const knockoutSec = document.getElementById('knockoutSection');
+        if (groups.length === 0) {
+          container.innerHTML = '<p>Belum ada grup. Tambahkan minimal 4 peserta lalu klik "Acak Grup".</p>';
+          knockoutSec.innerHTML = '';
+          return;
+        }
+        let html = '';
+        groups.forEach((g, idx) => {
+          const standings = getGroupStandings(idx);
+          html += `<div class="group-box"><h3>${g.name}</h3><table class="standings-table"><tr><th>Pemain</th><th>M</th><th>M-K</th><th>Game (M-K)</th><th>Poin (M-K)</th></tr>`;
+          standings.forEach(s => html += `<tr><td>${getPlayerName(s.pid)}</td><td>${s.wins}-${s.losses}</td><td>${s.wins}-${s.losses}</td><td>${s.gamesWon}-${s.gamesLost}</td><td>${s.pointsFor}-${s.pointsAgainst}</td></tr>`);
+          html += `</table><h4>Pertandingan</h4>`;
+          const matches = groupMatches.filter(m => m.groupIndex === idx);
+          matches.forEach(m => {
+            const scoreText = m.finished ? `${m.scores.map(g => `${g.p1}-${g.p2}`).join(', ')} (Pemenang: ${getPlayerName(m.winner)})` : 'Belum dimainkan';
+            html += `<div class="match-item"><span>${getPlayerName(m.p1)} vs ${getPlayerName(m.p2)}</span><span>${scoreText}</span>${!m.finished ? `<button class="action-btn" onclick="app.setCurrentMatch('group', ${m.id})">Mainkan</button>` : ''}</div>`;
+          });
+          html += `</div>`;
+        });
+        container.innerHTML = html;
+
+        const allGroupMatchesFinished = groupMatches.length > 0 && groupMatches.every(m => m.finished);
+        if (allGroupMatchesFinished && knockoutMatches.length === 0) {
+          knockoutSec.innerHTML = `<button id="genKnockoutBtn" class="action-btn" style="padding:10px 24px;">Lanjut ke Babak Gugur</button>`;
+        } else if (knockoutMatches.length > 0) {
+          let bracketHtml = '<h3>Bagan Babak Gugur</h3><div class="bracket">';
+          const rounds = [...new Set(knockoutMatches.map(m => m.round))].sort((a,b) => a-b);
+          rounds.forEach(r => {
+            bracketHtml += `<div class="round"><h3>${r === 1 ? 'Perempat Final' : r === 2 ? 'Semifinal' : 'Final'}</h3>`;
+            knockoutMatches.filter(m => m.round === r).forEach(m => {
+              const p1Name = m.p1 ? getPlayerName(m.p1) : '???';
+              const p2Name = m.p2 ? getPlayerName(m.p2) : '???';
+              const score = m.scores.length ? m.scores.map(g => `${g.p1}-${g.p2}`).join(', ') : '';
+              bracketHtml += `<div class="bracket-match"><div class="match-teams">${p1Name} vs ${p2Name}</div><div>${score}</div>${m.finished ? `<strong>${getPlayerName(m.winner)}</strong>` : (m.p1 && m.p2 ? `<button class="action-btn" onclick="app.setCurrentMatch('knockout', ${m.id})">Mainkan</button>` : '')}</div>`;
+            });
+            bracketHtml += `</div>`;
+          });
+          bracketHtml += '</div>';
+          knockoutSec.innerHTML = bracketHtml;
+        }
+      }
+
+      function renderScoreboard() {
+        const content = document.getElementById('scoreBoardContent');
+        if (!currentMatch || !matchType) {
+          content.innerHTML = '<p>Pilih pertandingan dari tab Grup & Bagan.</p>';
+          return;
+        }
+        const match = currentMatch;
+        const p1Name = getPlayerName(match.p1);
+        const p2Name = getPlayerName(match.p2);
+        const game = match.scores[currentGame] || { p1:0, p2:0 };
+        let html = `<div class="players"><span class="player">${p1Name}</span><span style="font-size:2rem;">vs</span><span class="player">${p2Name}</span></div>
+          <div class="game-status">Game ke-${currentGame+1} | Skor: ${match.scores.map((g,i) => `${i+1}: ${g.p1}-${g.p2}`).join(', ')}</div>
+          <div class="points">
+            <button class="point-btn" onclick="app.addPoint('p1')">➕ ${game.p1}</button>
+            <button class="point-btn" onclick="app.addPoint('p2')">${game.p2} ➕</button>
+          </div>`;
+        if (match.finished) html += `<p style="font-size:1.3rem; font-weight:bold; color:#0f766e;">Pemenang: ${getPlayerName(match.winner)}</p>`;
+        content.innerHTML = html;
+      }
+
+      function renderResults() {
+        const container = document.getElementById('finalResults');
+        if (groups.length === 0) { container.innerHTML = '<p>Belum ada data.</p>'; return; }
+        let html = '<h3>Klasemen Grup</h3>';
+        groups.forEach((g, idx) => {
+          const standings = getGroupStandings(idx);
+          html += `<h4>${g.name}</h4><ol>`;
+          standings.forEach(s => html += `<li>${getPlayerDetails(s.pid)} (M:${s.wins})</li>`);
+          html += `</ol>`;
+        });
+        if (knockoutMatches.length > 0) {
+          const final = knockoutMatches.find(m => m.round === Math.max(...knockoutMatches.map(x=>x.round)) && m.finished);
+          if (final) {
+            html += `<div class="winner">🏆 Juara: ${getPlayerDetails(final.winner)}</div>`;
+            const semiFinalists = knockoutMatches.filter(m => m.round === Math.max(...knockoutMatches.map(x=>x.round))-1 && m.finished);
+            if (semiFinalists.length) {
+              html += '<h4>Semifinalis:</h4><ul>';
+              semiFinalists.forEach(m => {
+                if (m.p1 && m.p1 !== m.winner) html += `<li>${getPlayerDetails(m.p1)}</li>`;
+                if (m.p2 && m.p2 !== m.winner) html += `<li>${getPlayerDetails(m.p2)}</li>`;
+              });
+              html += '</ul>';
+            }
+          }
+        }
+        container.innerHTML = html;
+      }
+
+      function exportToExcel() {
+        if (players.length === 0) { alert('Belum ada data peserta.'); return; }
+        const data = [['Nama', 'No Telepon/WA', 'Alamat']];
+        players.forEach(p => data.push([p.name, p.phone || '', p.address || '']));
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.aoa_to_sheet(data);
+        XLSX.utils.book_append_sheet(wb, ws, "Peserta");
+        XLSX.writeFile(wb, `Data_Peserta_${new Date().toISOString().slice(0,10)}.xlsx`);
+      }
+
+      window.app = {
+        saveEventInfo() {
+          eventInfo.name = document.getElementById('eventName').value.trim();
+          eventInfo.organizer = document.getElementById('eventOrganizer').value.trim();
+          eventInfo.location = document.getElementById('eventLocation').value.trim();
+          renderEventHeader();
+          alert('Informasi event disimpan!');
+        },
+        addPlayer() {
+          const name = document.getElementById('playerName').value.trim();
+          if (!name) return alert('Nama wajib diisi!');
+          players.push({
+            id: Date.now() + Math.random(),
+            name,
+            phone: document.getElementById('playerPhone').value.trim(),
+            address: document.getElementById('playerAddress').value.trim()
+          });
+          document.getElementById('playerName').value = '';
+          document.getElementById('playerPhone').value = '';
+          document.getElementById('playerAddress').value = '';
+          renderAll();
+        },
+        exportExcel,
+        generateGroups() {
+          if (players.length < 4) return alert('Minimal 4 peserta');
+          groups = []; groupMatches = []; knockoutMatches = []; currentMatch = null; matchType = null;
+          const shuffled = [...players].sort(() => Math.random() - 0.5);
+          const numGroups = Math.ceil(shuffled.length / 4);
+          const groupNames = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+          for (let i = 0; i < numGroups; i++) {
+            groups.push({ name: `Grup ${groupNames[i] || i+1}`, players: shuffled.slice(i*4, i*4+4).map(p => p.id) });
+          }
+          let matchId = 1;
+          groups.forEach((g, idx) => {
+            const pids = g.players;
+            for (let i = 0; i < pids.length; i++) {
+              for (let j = i+1; j < pids.length; j++) {
+                groupMatches.push({ id: matchId++, groupIndex: idx, p1: pids[i], p2: pids[j], scores: [{p1:0, p2:0}], winner: null, finished: false });
+              }
+            }
+          });
+          renderAll();
+        },
+        setCurrentMatch(type, matchId) {
+          matchType = type;
+          currentMatch = (type === 'group' ? groupMatches : knockoutMatches).find(m => m.id === matchId);
+          if (!currentMatch) return;
+          currentGame = currentMatch.scores.length - 1;
+          document.querySelectorAll('.nav-menu .tab-btn').forEach(b => b.classList.remove('active'));
+          document.querySelector('.nav-menu .tab-btn[data-tab="scoreboard"]').classList.add('active');
+          document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+          document.getElementById('tab-scoreboard').classList.add('active');
+          renderScoreboard();
+        },
+        addPoint(player) {
+          if (!currentMatch || currentMatch.finished) return;
+          const match = currentMatch;
+          if (!match.scores[currentGame]) match.scores[currentGame] = { p1:0, p2:0 };
+          if (player === 'p1') match.scores[currentGame].p1++;
+          else match.scores[currentGame].p2++;
+          if (isGameOver(match.scores[currentGame].p1, match.scores[currentGame].p2)) {
+            checkMatchFinished(match);
+            if (!match.finished) {
+              match.scores.push({ p1:0, p2:0 });
+              currentGame = match.scores.length - 1;
+            } else if (matchType === 'knockout') {
+              advanceKnockout(match);
+            }
+          }
+          renderAll();
+          renderScoreboard();
+        },
+        generateKnockout() {
+          if (!groupMatches.length || !groupMatches.every(m => m.finished)) return alert('Selesaikan semua pertandingan grup.');
+          let qualifiers = [];
+          groups.forEach((g, idx) => {
+            const standings = getGroupStandings(idx);
+            if (standings.length >= 2) {
+              qualifiers.push({ pid: standings[0].pid, rank: 1, group: idx });
+              qualifiers.push({ pid: standings[1].pid, rank: 2, group: idx });
+            }
+          });
+          if (qualifiers.length < 4) return alert('Peserta gugur kurang.');
+          const winners = qualifiers.filter(q => q.rank === 1).sort((a,b) => {
+            const sa = getGroupStandings(a.group).find(s => s.pid === a.pid);
+            const sb = getGroupStandings(b.group).find(s => s.pid === b.pid);
+            if (sb.wins !== sa.wins) return sb.wins - sa.wins;
+            const gdA = sa.gamesWon - sa.gamesLost, gdB = sb.gamesWon - sb.gamesLost;
+            if (gdA !== gdB) return gdB - gdA;
+            return (sb.pointsFor - sb.pointsAgainst) - (sa.pointsFor - sa.pointsAgainst);
+          });
+          const runnersUp = qualifiers.filter(q => q.rank === 2).sort((a,b) => {
+            const sa = getGroupStandings(a.group).find(s => s.pid === a.pid);
+            const sb = getGroupStandings(b.group).find(s => s.pid === b.pid);
+            if (sb.wins !== sa.wins) return sb.wins - sa.wins;
+            const gdA = sa.gamesWon - sa.gamesLost, gdB = sb.gamesWon - sb.gamesLost;
+            if (gdA !== gdB) return gdB - gdA;
+            return (sb.pointsFor - sb.pointsAgainst) - (sa.pointsFor - sa.pointsAgainst);
+          });
+          let bracketPairs = [], usedRunners = new Set();
+          winners.forEach((w, i) => {
+            let idx = (winners.length - 1 - i) % runnersUp.length;
+            while (usedRunners.has(idx) || runnersUp[idx].group === w.group) idx = (idx + 1) % runnersUp.length;
+            if (!usedRunners.has(idx)) { bracketPairs.push({ p1: w.pid, p2: runnersUp[idx].pid }); usedRunners.add(idx); }
+          });
+          const totalSlots = Math.pow(2, Math.ceil(Math.log2(bracketPairs.length * 2)));
+          let bracket = [];
+          for (let i = 0; i < totalSlots/2; i++) bracket.push(i < bracketPairs.length ? bracketPairs[i] : { p1: null, p2: null });
+          knockoutMatches = [];
+          let matchId = 1000;
+          const round1Matches = bracket.map(pair => ({
+            id: matchId++, round: 1, p1: pair.p1, p2: pair.p2,
+            scores: pair.p1 && pair.p2 ? [{p1:0, p2:0}] : [],
+            winner: (pair.p1 && !pair.p2) ? pair.p1 : (!pair.p1 && pair.p2 ? pair.p2 : null),
+            finished: (pair.p1 && !pair.p2) || (!pair.p1 && pair.p2)
+          }));
+          knockoutMatches.push(...round1Matches);
+          let currentRound = 1, currentMatches = round1Matches.filter(m => !m.finished || (m.p1 && m.p2));
+          while (currentMatches.length > 1) {
+            currentRound++;
+            const next = [];
+            for (let i = 0; i < currentMatches.length; i+=2) next.push({ id: matchId++, round: currentRound, p1: null, p2: null, scores: [], winner: null, finished: false });
+            knockoutMatches.push(...next);
+            currentMatches = next;
+          }
+          renderAll();
+        }
+      };
+
+      function advanceKnockout(match) {
+        const nextRound = match.round + 1;
+        const nextMatch = knockoutMatches.find(m => m.round === nextRound && (m.p1 === null || m.p2 === null));
+        if (nextMatch) {
+          if (nextMatch.p1 === null) nextMatch.p1 = match.winner;
+          else if (nextMatch.p2 === null) nextMatch.p2 = match.winner;
+          if (nextMatch.p1 && nextMatch.p2 && nextMatch.scores.length === 0) nextMatch.scores = [{p1:0, p2:0}];
+        }
+      }
+
+      document.getElementById('saveEventInfo').addEventListener('click', () => app.saveEventInfo());
+      document.getElementById('addPlayerBtn').addEventListener('click', () => app.addPlayer());
+      document.getElementById('exportExcelBtn').addEventListener('click', () => app.exportExcel());
+      document.getElementById('generateGroupsBtn').addEventListener('click', () => app.generateGroups());
+      document.addEventListener('click', e => { if (e.target.id === 'genKnockoutBtn') app.generateKnockout(); });
+
+      document.querySelectorAll('.nav-menu .tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.nav-menu .tab-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          const tabId = btn.dataset.tab;
+          document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+          document.getElementById('tab-' + tabId).classList.add('active');
+          if (tabId === 'groups') renderGroupsAndMatches();
+          if (tabId === 'results') renderResults();
+        });
+      });
+
+      renderAll();
+    })();
+  </script>
+</body>
+  </html>
