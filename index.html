@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aplikasi Turnamen Bulu Tangkis</title>
+
+  <!-- SheetJS untuk Ekspor Excel -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+  <style>
+    :root {
+      --primary: #c0392b;
+      --primary-dark: #962d22;
+      --accent: #27ae60;
+      --bg: #f4f7f6;
+      --surface: #ffffff;
+      --text: #2c3e50;
+      --border: #e2e8f0;
+      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); padding-bottom: 50px; }
+
+    header {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: white;
+      padding: 1.5rem;
+      text-align: center;
+      box-shadow: var(--shadow);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 15px;
+    }
+    header img { height: 50px; }
+
+    .nav-tabs {
+      display: flex;
+      justify-content: center;
+      background-color: var(--surface);
+      border-bottom: 2px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .nav-tab {
+      padding: 1rem 1.5rem;
+      cursor: pointer;
+      font-weight: bold;
+      color: #7f8c8d;
+      border-bottom: 3px solid transparent;
+      transition: all 0.3s;
+    }
+    .nav-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+    .container { max-width: 1000px; margin: 2rem auto; padding: 0 1rem; }
+    .card { background: var(--surface); padding: 1.5rem; border-radius: 8px; box-shadow: var(--shadow); margin-bottom: 1.5rem; }
+
+    h2, h3 { margin-bottom: 1rem; color: var(--primary); }
+    .form-group { margin-bottom: 1rem; }
+    label { display: block; margin-bottom: 0.5rem; font-weight: 600; }
+    input[type="text"], input[type="tel"], select {
+      width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 4px;
+    }
+
+    .btn {
+      padding: 0.75rem 1.25rem;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+      color: white;
+      background-color: var(--primary);
+      transition: background 0.2s;
+    }
+    .btn:hover { background-color: var(--primary-dark); }
+    .btn-excel { background-color: var(--accent); }
+    .btn-excel:hover { background-color: #219150; }
+    .btn-sub { background-color: #7f8c8d; padding: 0.4rem 0.8rem; font-size: 0.85rem; }
+    .btn-sub:hover { background-color: #626d6e; }
+    
+    /* Tombol Hapus Peserta */
+    .btn-delete {
+      background-color: #e74c3c;
+      color: white;
+      border: none;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 14px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+    .btn-delete:hover {
+      background-color: #c0392b;
+      transform: scale(1.1);
+    }
+
+    table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+    th, td { border: 1px solid var(--border); padding: 0.75rem; text-align: left; vertical-align: middle; }
+    th { background-color: #f8fafc; }
+
+    .avatar {
+      width: 40px; height: 40px; border-radius: 50%; object-fit: cover; cursor: pointer;
+      transition: transform 0.2s;
+    }
+    .avatar:hover { transform: scale(1.1); }
+
+    /* Layout Match Box & Scoreboard */
+    .match-card {
+      background: #fafafa;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
+    .match-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.75rem;
+      font-size: 0.9rem;
+      font-weight: bold;
+      color: #555;
+    }
+    .score-controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      background: white;
+      padding: 0.75rem;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+    }
+    .player-name { flex: 1; font-weight: bold; }
+    .score-display {
+      font-size: 1.5rem;
+      font-weight: bold;
+      min-width: 35px;
+      text-align: center;
+      color: var(--primary);
+    }
+    .btn-score {
+      padding: 0.4rem 0.8rem;
+      font-size: 1rem;
+      border-radius: 4px;
+    }
+
+    /* Bracket Babak Gugur */
+    .bracket { display: flex; flex-direction: row; overflow-x: auto; padding: 20px 0; }
+    .bracket-column { display: flex; flex-direction: column; justify-content: space-around; min-width: 220px; margin-right: 20px; }
+    .bracket-match { background: white; border: 1px solid var(--border); border-radius: 6px; padding: 10px; margin: 10px 0; box-shadow: var(--shadow); }
+    .bracket-team { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; }
+    .bracket-team:last-child { border-bottom: none; }
+    .bracket-team.winner { font-weight: bold; color: var(--accent); }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* Modal Viewer */
+    .modal {
+      display: none; position: fixed; z-index: 1000; top: 0; left: 0; width: 100%; height: 100%;
+      background-color: rgba(0,0,0,0.8); justify-content: center; align-items: center;
+    }
+    .modal img { max-width: 80%; max-height: 80%; border-radius: 8px; border: 3px solid white; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <img src="17865337300642.png" alt="Logo" onerror="this.style.display='none'">
+    <div>
+      <h1 id="app-title">Turnamen Bulu Tangkis</h1>
+      <p id="app-subtitle">Sistem Manajemen & Pertandingan</p>
+    </div>
+  </header>
+
+  <div class="nav-tabs">
+    <div class="nav-tab active" onclick="switchTab('peserta', event)">Peserta</div>
+    <div class="nav-tab" onclick="switchTab('grup', event)">Fase Grup</div>
+    <div class="nav-tab" onclick="switchTab('gugur', event)">Babak Gugur</div>
+  </div>
+
+  <div class="container">
+    <!-- TAB PESERTA -->
+    <div id="tab-peserta" class="tab-content active">
+      <div class="card">
+        <h3>Pengaturan Event</h3>
+        <div class="form-group">
+          <label>Nama Turnamen</label>
+          <input type="text" id="event-name" placeholder="Contoh: Kejuaraan Bulu Tangkis Samarinda">
+        </div>
+        <button class="btn" onclick="saveEventInfo()">Simpan Metadata</button>
+      </div>
+
+      <div class="card">
+        <h3>Pendaftaran Peserta</h3>
+        <form id="form-peserta" onsubmit="addPeserta(event)">
+          <div class="form-group">
+            <label>Nama Lengkap</label>
+            <input type="text" id="p-nama" required>
+          </div>
+          <div class="form-group">
+            <label>No. Telepon</label>
+            <input type="tel" id="p-telp" required>
+          </div>
+          <div class="form-group">
+            <label>Alamat</label>
+            <input type="text" id="p-alamat" required>
+          </div>
+          <div class="form-group">
+            <label>Foto Profil</label>
+            <input type="file" id="p-foto" accept="image/*">
+          </div>
+          <button type="submit" class="btn">Tambah Peserta</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <h3>Daftar Peserta (<span id="total-peserta">0</span>)</h3>
+          <button class="btn btn-excel" onclick="exportPesertaExcel()">Ekspor Excel</button>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Foto</th>
+              <th>Nama</th>
+              <th>Telepon</th>
+              <th>Alamat</th>
+              <th style="width: 50px; text-align: center;">Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="tbl-peserta"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB FASE GRUP -->
+    <div id="tab-grup" class="tab-content">
+      <div class="card" style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <button class="btn" onclick="generateGroups()">Acak & Buat Fase Grup</button>
+        <button class="btn btn-excel" onclick="exportGrupExcel()">Ekspor Rekap Grup</button>
+      </div>
+      <div id="group-container"></div>
+    </div>
+
+    <!-- TAB BABAK GUGUR -->
+    <div id="tab-gugur" class="tab-content">
+      <div class="card">
+        <button class="btn" onclick="generateKnockout()">Generate Babak Gugur</button>
+      </div>
+      <div id="bracket-container" class="bracket"></div>
+    </div>
+  </div>
+
+  <!-- Modal Foto -->
+  <div id="imgModal" class="modal" onclick="closeModal()">
+    <img id="modalImg" src="" alt="Foto Peserta Full">
+  </div>
+
+  <script>
+    let state = {
+      event: { name: 'Turnamen Bulu Tangkis' },
+      peserta: [],
+      groups: [],
+      knockout: []
+    };
+
+    window.onload = function() {
+      const saved = localStorage.getItem('badminton_state');
+      if (saved) {
+        state = JSON.parse(saved);
+        if (state.event && state.event.name) {
+          document.getElementById('event-name').value = state.event.name;
+          document.getElementById('app-title').innerText = state.event.name;
+        }
+        renderPesertaTable();
+        renderGroups();
+        renderKnockout();
+      }
+    };
+
+    function saveState() {
+      localStorage.setItem('badminton_state', JSON.stringify(state));
+    }
+
+    function switchTab(tab, e) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
+      document.getElementById(`tab-${tab}`).classList.add('active');
+      if (e) e.target.classList.add('active');
+    }
+
+    function saveEventInfo() {
+      const val = document.getElementById('event-name').value;
+      if (val) {
+        state.event.name = val;
+        document.getElementById('app-title').innerText = val;
+        saveState();
+        alert('Metadata disimpan!');
+      }
+    }
+
+    function addPeserta(e) {
+      e.preventDefault();
+      const nama = document.getElementById('p-nama').value;
+      const telp = document.getElementById('p-telp').value;
+      const alamat = document.getElementById('p-alamat').value;
+      const fileInput = document.getElementById('p-foto');
+
+      const processAdd = (fotoBase64) => {
+        state.peserta.push({
+          id: Date.now(),
+          nama, telp, alamat,
+          foto: fotoBase64 || 'https://via.placeholder.com/40?text=P'
+        });
+        saveState();
+        renderPesertaTable();
+        document.getElementById('form-peserta').reset();
+      };
+
+      if (fileInput.files && fileInput.files[0]) {
+        const reader = new FileReader();
+        reader.onload = (e) => processAdd(e.target.result);
+        reader.readAsDataURL(fileInput.files[0]);
+      } else {
+        processAdd(null);
+      }
+    }
+
+    // Fungsi Hapus Peserta
+    function deletePeserta(id) {
+      const target = state.peserta.find(p => p.id === id);
+      if (!target) return;
+
+      if (confirm(`Apakah Anda yakin ingin menghapus peserta "${target.nama}"?`)) {
+        state.peserta = state.peserta.filter(p => p.id !== id);
+        saveState();
+        renderPesertaTable();
+      }
+    }
+
+    function renderPesertaTable() {
+      const tbody = document.getElementById('tbl-peserta');
+      tbody.innerHTML = '';
+      document.getElementById('total-peserta').innerText = state.peserta.length;
+
+      state.peserta.forEach(p => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><img src="${p.foto}" class="avatar" onclick="openModal('${p.foto}')"></td>
+          <td>${p.nama}</td>
+          <td>${p.telp}</td>
+          <td>${p.alamat}</td>
+          <td style="text-align: center;">
+            <button class="btn-delete" onclick="deletePeserta(${p.id})" title="Hapus Peserta">✕</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function openModal(src) {
+      document.getElementById('modalImg').src = src;
+      document.getElementById('imgModal').style.display = 'flex';
+    }
+
+    function closeModal() {
+      document.getElementById('imgModal').style.display = 'none';
+    }
+
+    function exportPesertaExcel() {
+      if (state.peserta.length === 0) return alert('Data peserta kosong!');
+      const data = state.peserta.map((p, idx) => ({
+        No: idx + 1,
+        Nama: p.nama,
+        Telepon: p.telp,
+        Alamat: p.alamat
+      }));
+      const ws = XLSX.utils.json_to_sheet(data);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Peserta");
+      XLSX.writeFile(wb, "Daftar_Peserta.xlsx");
+    }
+
+    /* --- FASE GRUP --- */
+    function generateGroups() {
+      if (state.peserta.length < 4) {
+        alert('Minimal 4 peserta untuk membuat fase grup.');
+        return;
+      }
+      const shuffled = [...state.peserta].sort(() => 0.5 - Math.random());
+      const numGroups = Math.ceil(shuffled.length / 4);
+      state.groups = Array.from({ length: numGroups }, (_, i) => ({
+        name: `Grup ${String.fromCharCode(65 + i)}`,
+        members: [],
+        matches: []
+      }));
+
+      shuffled.forEach((p, i) => {
+        state.groups[i % numGroups].members.push(p);
+      });
+
+      state.groups.forEach(g => {
+        g.matches = [];
+        for (let i = 0; i < g.members.length; i++) {
+          for (let j = i + 1; j < g.members.length; j++) {
+            g.matches.push({
+              id: Date.now() + Math.random(),
+              p1: g.members[i],
+              p2: g.members[j],
+              s1: 0, s2: 0,
+              g1: 0, g2: 0, // Game won
+              currentGame: 1,
+              done: false
+            });
+          }
+        }
+      });
+
+      saveState();
+      renderGroups();
+    }
+
+    function renderGroups() {
+      const container = document.getElementById('group-container');
+      container.innerHTML = '';
+
+      state.groups.forEach((g, gIdx) => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        
+        // Kalkulasi Standings
+        const standings = calculateStandings(g);
+        
+        let standingsRows = standings.map((s, i) => `
+          <tr>
+            <td>${i + 1}</td>
+            <td>${s.nama}</td>
+            <td>${s.m}</td>
+            <td>${s.k}</td>
+            <td>${s.gameDiff >= 0 ? '+' + s.gameDiff : s.gameDiff}</td>
+            <td>${s.pointDiff >= 0 ? '+' + s.pointDiff : s.pointDiff}</td>
+          </tr>
+        `).join('');
+
+        let matchesHTML = g.matches.map((m, mIdx) => `
+          <div class="match-card">
+            <div class="match-header">
+              <span>Game ${m.currentGame} (Best of 3)</span>
+              <span>Set Won: ${m.g1} - ${m.g2} ${m.done ? '(Selesai)' : ''}</span>
+            </div>
+            <div class="score-controls">
+              <span class="player-name">${m.p1.nama}</span>
+              <button class="btn btn-sub btn-score" onclick="adjustPoint(${gIdx}, ${mIdx}, 1, -1)">-</button>
+              <span class="score-display">${m.s1}</span>
+              <button class="btn btn-score" onclick="adjustPoint(${gIdx}, ${mIdx}, 1, 1)">+</button>
+            </div>
+            <div class="score-controls" style="margin-top: 5px;">
+              <span class="player-name">${m.p2.nama}</span>
+              <button class="btn btn-sub btn-score" onclick="adjustPoint(${gIdx}, ${mIdx}, 2, -1)">-</button>
+              <span class="score-display">${m.s2}</span>
+              <button class="btn btn-score" onclick="adjustPoint(${gIdx}, ${mIdx}, 2, 1)">+</button>
+            </div>
+          </div>
+        `).join('');
+
+        card.innerHTML = `
+          <h3>${g.name}</h3>
+          <h4>Klasemen</h4>
+          <table>
+            <thead>
+              <tr>
+                <th>Pos</th><th>Nama</th><th>M</th><th>K</th><th>Sel. Game</th><th>Sel. Poin</th>
+              </tr>
+            </thead>
+            <tbody>${standingsRows}</tbody>
+          </table>
+          <h4 style="margin-top: 1.5rem; margin-bottom: 0.5rem;">Pertandingan</h4>
+          ${matchesHTML}
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function adjustPoint(gIdx, mIdx, player, delta) {
+      const match = state.groups[gIdx].matches[mIdx];
+      if (match.done) return;
+
+      if (player === 1) match.s1 = Math.max(0, match.s1 + delta);
+      else match.s2 = Math.max(0, match.s2 + delta);
+
+      // Logika Rally Point Resmi (21 Poin, Max 30, Deuce Selisih 2)
+      checkGameStatus(match);
+      saveState();
+      renderGroups();
+    }
+
+    function checkGameStatus(m) {
+      const s1 = m.s1;
+      const s2 = m.s2;
+
+      const isWin = (a, b) => (a >= 21 && a - b >= 2) || a === 30;
+
+      if (isWin(s1, s2)) {
+        m.g1++;
+        m.s1 = 0; m.s2 = 0;
+        m.currentGame++;
+      } else if (isWin(s2, s1)) {
+        m.g2++;
+        m.s1 = 0; m.s2 = 0;
+        m.currentGame++;
+      }
+
+      if (m.g1 === 2 || m.g2 === 2) {
+        m.done = true;
+      }
+    }
+
+    function calculateStandings(g) {
+      const stats = {};
+      g.members.forEach(m => {
+        stats[m.id] = { id: m.id, nama: m.nama, m: 0, k: 0, gWin: 0, gLose: 0, pWin: 0, pLose: 0 };
+      });
+
+      g.matches.forEach(m => {
+        if (m.done) {
+          if (m.g1 > m.g2) { stats[m.p1.id].m++; stats[m.p2.id].k++; }
+          else { stats[m.p2.id].m++; stats[m.p1.id].k++; }
+        }
+        if (stats[m.p1.id]) {
+          stats[m.p1.id].gWin += m.g1; stats[m.p1.id].gLose += m.g2;
+          stats[m.p2.id].gWin += m.g2; stats[m.p2.id].gLose += m.g1;
+        }
+      });
+
+      return Object.values(stats).map(s => ({
+        ...s,
+        gameDiff: s.gWin - s.gLose,
+        pointDiff: s.pWin - s.pLose
+      })).sort((a, b) => b.m - a.m || b.gameDiff - a.gameDiff || b.pointDiff - a.pointDiff);
+    }
+
+    function exportGrupExcel() {
+      if (state.groups.length === 0) return alert('Data grup belum ada!');
+      const wb = XLSX.utils.book_new();
+      state.groups.forEach(g => {
+        const standings = calculateStandings(g);
+        const wsData = standings.map((s, i) => ({
+          Posisi: i + 1,
+          Nama: s.nama,
+          Menang: s.m,
+          Kalah: s.k,
+          'Selisih Game': s.gameDiff
+        }));
+        const ws = XLSX.utils.json_to_sheet(wsData);
+        XLSX.utils.book_append_sheet(wb, ws, g.name);
+      });
+      XLSX.writeFile(wb, "Klasemen_Grup.xlsx");
+    }
+
+    /* --- BABAK GUGUR --- */
+    function generateKnockout() {
+      if (state.groups.length === 0) return alert('Selesaikan fase grup terlebih dahulu!');
+
+      let qualified = [];
+      state.groups.forEach(g => {
+        const top = calculateStandings(g).slice(0, 2);
+        qualified.push(...top.map(t => ({ id: t.id, nama: t.nama })));
+      });
+
+      if (qualified.length < 2) return alert('Tidak cukup peserta lolos.');
+
+      state.knockout = [];
+      let currentRound = [];
+      for (let i = 0; i < qualified.length; i += 2) {
+        currentRound.push({
+          p1: qualified[i],
+          p2: qualified[i+1] || { id: null, nama: 'BYE' },
+          winner: qualified[i+1] ? null : qualified[i]
+        });
+      }
+      state.knockout.push(currentRound);
+      saveState();
+      renderKnockout();
+    }
+
+    function renderKnockout() {
+      const container = document.getElementById('bracket-container');
+      container.innerHTML = '';
+
+      state.knockout.forEach((round, rIdx) => {
+        const col = document.createElement('div');
+        col.className = 'bracket-column';
+        col.innerHTML = `<h4>Ronde ${rIdx + 1}</h4>`;
+
+        round.forEach((m, mIdx) => {
+          const matchBox = document.createElement('div');
+          matchBox.className = 'bracket-match';
+          matchBox.innerHTML = `
+            <div class="bracket-team ${m.winner && m.winner.id === m.p1?.id ? 'winner' : ''}" 
+                 onclick="setKnockoutWinner(${rIdx}, ${mIdx}, 1)">
+              ${m.p1 ? m.p1.nama : 'TBD'}
+            </div>
+            <div class="bracket-team ${m.winner && m.winner.id === m.p2?.id ? 'winner' : ''}" 
+                 onclick="setKnockoutWinner(${rIdx}, ${mIdx}, 2)">
+              ${m.p2 ? m.p2.nama : 'TBD'}
+            </div>
+          `;
+          col.appendChild(matchBox);
+        });
+        container.appendChild(col);
+      });
+    }
+
+    function setKnockoutWinner(rIdx, mIdx, player) {
+      const match = state.knockout[rIdx][mIdx];
+      if (!match.p1 || !match.p2 || match.p2.nama === 'BYE') return;
+
+      match.winner = player === 1 ? match.p1 : match.p2;
+      saveState();
+      renderKnockout();
+    }
+  </script>
+</body>
+</html>
+
