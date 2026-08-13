@@ -8,11 +8,10 @@
   "theme_color": "#007bff",
   "icons": [
     {
-      "src": "1786534703442.png",
+      "src": "https://via.placeholder.com/512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
     }
   ]
 }
-
