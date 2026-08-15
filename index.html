@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aplikasi Turnamen Sporty</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800&family=Teko:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Montserrat', sans-serif;
+    }
+
+    body {
+      background-color: #0f172a;
+      padding: 15px;
+      color: #f8fafc;
+    }
+
+    .container {
+      max-width: 550px;
+      margin: 0 auto;
+      padding-top: 10px;
+    }
+
+    /* Navigation Tabs */
+    .nav-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+      overflow-x: auto;
+      padding-bottom: 5px;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 10px 14px;
+      border: none;
+      background: #1e293b;
+      color: #94a3b8;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 800;
+      text-transform: uppercase;
+      font-style: italic;
+      cursor: pointer;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 1px solid #334155;
+    }
+
+    .tab-btn:hover {
+      color: #fff;
+      transform: translateY(-2px);
+    }
+
+    .tab-btn.active {
+      background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);
+      color: white;
+      border-color: transparent;
+      box-shadow: 0 4px 15px rgba(255, 65, 108, 0.4);
+    }
+
+    /* Card Box */
+    .card {
+      background: #1e293b;
+      padding: 22px;
+      border-radius: 14px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+      margin-bottom: 20px;
+      border: 1px solid #334155;
+    }
+
+    .card h2 {
+      font-family: 'Teko', sans-serif;
+      font-size: 26px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 15px;
+      color: #f1f5f9;
+      border-left: 4px solid #ff4b2b;
+      padding-left: 10px;
+    }
+
+    /* Form Input */
+    .form-group {
+      margin-bottom: 14px;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 12px 15px;
+      background-color: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      font-size: 14px;
+      color: #fff;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .form-control:focus {
+      border-color: #ff4b2b;
+    }
+
+    select.form-control option {
+      background: #0f172a;
+      color: #fff;
+    }
+
+    /* Tombol */
+    .btn {
+      position: relative;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 8px;
+      font-weight: 800;
+      font-size: 13px;
+      text-transform: uppercase;
+      font-style: italic;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      text-align: center;
+      overflow: hidden;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .btn-red {
+      background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);
+      color: white;
+      box-shadow: 0 4px 15px rgba(255, 75, 43, 0.4);
+    }
+
+    .btn-blue {
+      background: linear-gradient(135deg, #00c6ff 0%, #0072ff 100%);
+      color: white;
+      box-shadow: 0 4px 15px rgba(0, 114, 255, 0.4);
+    }
+
+    .btn-green {
+      background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+      color: #0f172a;
+      box-shadow: 0 4px 15px rgba(56, 239, 125, 0.4);
+    }
+
+    .btn-sm {
+      padding: 6px 10px;
+      font-size: 11px;
+    }
+
+    .btn-full {
+      width: 100%;
+    }
+
+    .media-buttons {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .media-buttons .btn {
+      flex: 1;
+    }
+
+    .info-text {
+      font-size: 12px;
+      color: #94a3b8;
+      margin-bottom: 15px;
+    }
+
+    .photo-preview {
+      width: 100%;
+      max-height: 180px;
+      object-fit: cover;
+      border-radius: 8px;
+      margin-top: 10px;
+      display: none;
+      border: 2px solid #334155;
+      cursor: pointer;
+    }
+
+    /* Tabel & Match Card */
+    .table-container {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      font-size: 13px;
+    }
+
+    th, td {
+      padding: 10px 12px;
+      text-align: center;
+      border-bottom: 1px solid #334155;
+    }
+
+    th {
+      background-color: #0f172a;
+      color: #ff4b2b;
+      font-family: 'Teko', sans-serif;
+      font-size: 18px;
+      letter-spacing: 0.5px;
+    }
+
+    td.text-left {
+      text-align: left;
+    }
+
+    td img {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      object-fit: cover;
+      cursor: pointer;
+    }
+
+    .empty-row {
+      text-align: center;
+      color: #94a3b8;
+      font-style: italic;
+      padding: 15px;
+    }
+
+    /* MATCH CARD & INPUT SKOR */
+    .match-card {
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .match-header {
+      font-size: 11px;
+      color: #ff4b2b;
+      font-weight: 800;
+      text-transform: uppercase;
+      border-bottom: 1px dashed #334155;
+      padding-bottom: 5px;
+    }
+
+    .match-body {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .match-team {
+      font-weight: bold;
+      font-size: 13px;
+      flex: 1;
+      text-align: center;
+      word-break: break-word;
+    }
+
+    .match-input-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .score-input {
+      width: 45px;
+      height: 35px;
+      text-align: center;
+      background: #1e293b;
+      border: 1px solid #334155;
+      color: #fff;
+      border-radius: 6px;
+      font-weight: bold;
+      font-size: 14px;
+    }
+
+    .score-input:focus {
+      border-color: #38ef7d;
+      outline: none;
+    }
+
+    /* VISUALISASI BRACKET TOURNAMENT */
+    .bracket-container {
+      display: flex;
+      gap: 15px;
+      overflow-x: auto;
+      padding: 10px 5px;
+    }
+
+    .bracket-round {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-around;
+      min-width: 140px;
+    }
+
+    .bracket-round-title {
+      font-family: 'Teko', sans-serif;
+      color: #ff4b2b;
+      font-size: 18px;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    .bracket-match {
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      margin: 8px 0;
+      overflow: hidden;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
+
+    .bracket-item {
+      padding: 8px 10px;
+      font-size: 12px;
+      font-weight: bold;
+      border-bottom: 1px solid #1e293b;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .bracket-item:last-child {
+      border-bottom: none;
+    }
+
+    .bracket-item.winner {
+      background: rgba(56, 239, 125, 0.15);
+      color: #38ef7d;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    /* MODAL ZOOM FOTO */
+    .image-modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(5px);
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .image-modal img {
+      max-width: 90%;
+      max-height: 80vh;
+      border-radius: 12px;
+      box-shadow: 0 0 25px rgba(255, 65, 108, 0.5);
+      border: 2px solid #334155;
+    }
+
+    .close-modal {
+      position: absolute;
+      top: 20px;
+      right: 25px;
+      color: #fff;
+      font-size: 35px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    
+    <!-- Tab Navigasi Sporty -->
+    <div class="nav-tabs">
+      <button class="tab-btn active" onclick="openTab('pendaftaran', event)">📋 Pendaftaran</button>
+      <button class="tab-btn" onclick="openTab('jadwal', event)">📅 Jadwal</button>
+      <button class="tab-btn" onclick="openTab('skor', event)">🏆 Skor</button>
+    </div>
+
+    <!-- Halaman Pendaftaran -->
+    <div id="pendaftaran" class="tab-content active">
+      <form class="card" onsubmit="simpanInfo(event)">
+        <h2>Informasi Event</h2>
+        <div class="form-group">
+          <input type="text" id="namaEvent" class="form-control" placeholder="Nama Event" required>
+        </div>
+        <div class="form-group">
+          <input type="text" id="penyelenggara" class="form-control" placeholder="Penyelenggara" required>
+        </div>
+        <div class="form-group">
+          <input type="text" id="lokasi" class="form-control" placeholder="Lokasi" required>
+        </div>
+        <div class="form-group">
+          <select id="sistemKompetisi" class="form-control" required>
+            <option value="" disabled selected>-- Pilih Sistem Kompetisi --</option>
+            <option value="Sistem Gugur">Sistem Gugur (Knockout)</option>
+            <option value="Setengah Kompetisi">Setengah Kompetisi (Round Robin)</option>
+          </select>
+        </div>
+        <button type="submit" class="btn btn-red">Simpan Info</button>
+      </form>
+
+      <form class="card" onsubmit="daftarPeserta(event)">
+        <h2>Daftar Peserta</h2>
+        <div class="form-group">
+          <input type="text" id="namaPeserta" class="form-control" placeholder="Nama Peserta" required>
+        </div>
+        <div class="form-group">
+          <input type="tel" id="noTelp" class="form-control" placeholder="No Telepon/WA" required>
+        </div>
+        <div class="form-group">
+          <input type="text" id="alamatPeserta" class="form-control" placeholder="Alamat" required>
+        </div>
+        
+        <input type="file" id="inputGaleri" accept="image/*" style="display: none;" onchange="previewImage(event)">
+        <input type="file" id="inputKamera" accept="image/*" capture="environment" style="display: none;" onchange="previewImage(event)">
+
+        <div class="media-buttons">
+          <button type="button" class="btn btn-blue" onclick="document.getElementById('inputGaleri').click()">🖼️ Galeri</button>
+          <button type="button" class="btn btn-green" onclick="document.getElementById('inputKamera').click()">📷 Kamera</button>
+        </div>
+        
+        <p id="infoFoto" class="info-text">Belum ada foto</p>
+        <img id="imgPreview" class="photo-preview" alt="Preview Foto Peserta" onclick="zoomImage(this.src)">
+
+        <button type="submit" class="btn btn-red btn-full" style="margin-top: 15px;">Daftar Peserta</button>
+      </form>
+
+      <div class="card">
+        <h2>Peserta Terdaftar</h2>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Foto</th>
+                <th class="text-left">Nama</th>
+                <th>No WA</th>
+                <th class="text-left">Alamat</th>
+              </tr>
+            </thead>
+            <tbody id="tabelPesertaBody">
+              <tr id="rowKosong">
+                <td colspan="4" class="empty-row">Belum ada peserta yang mendaftar.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab Jadwal -->
+    <div id="jadwal" class="tab-content">
+      <div class="card">
+        <h2>Jadwal & Input Skor</h2>
+        <p id="infoSistemKompetisi" class="info-text" style="color: #00c6ff; font-weight: bold;">Sistem Kompetisi: Belum diatur</p>
+        
+        <button type="button" class="btn btn-green btn-full" onclick="acakJadwal()" style="margin-bottom: 15px;">
+          🎲 Acak & Susun Jadwal
+        </button>
+
+        <!-- AREA BAGAN BRACKET TURNAMEN -->
+        <div id="areaBracket" style="display: none; margin-bottom: 20px;">
+          <h2 style="font-size: 20px; border-left-color: #38ef7d;">Bagan Turnamen</h2>
+          <div class="table-container">
+            <div id="bracketContainer" class="bracket-container"></div>
+          </div>
+        </div>
+
+        <!-- LIST JADWAL MATCH -->
+        <h2>Daftar Pertandingan</h2>
+        <div id="kontainerJadwal">
+          <p class="empty-row">Klik tombol "Acak & Susun Jadwal" di atas untuk membuat jadwal pertandingan.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab Skor / Papan Klasemen -->
+    <div id="skor" class="tab-content">
+      <div class="card">
+        <h2>Papan Klasemen / Skor</h2>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th class="text-left">Peserta</th>
+                <th>M</th>
+                <th>W</th>
+                <th>D</th>
+                <th>L</th>
+                <th>GD</th>
+                <th>PTS</th>
+              </tr>
+            </thead>
+            <tbody id="tabelKlasemenBody">
+              <tr>
+                <td colspan="7" class="empty-row">Jadwal belum disusun.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- POPUP MODAL UNTUK ZOOM FOTO -->
+  <div id="imgModal" class="image-modal" onclick="closeZoomModal()">
+    <span class="close-modal">&times;</span>
+    <img id="modalImg" src="" alt="Zoom Foto">
+  </div>
+
+  <script>
+    let currentFotoBase64 = '';
+    let daftarPesertaList = [];
+    let sistemKompetisiTerpilih = '';
+    let matchesData = [];
+
+    function openTab(tabId, evt) {
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+
+      document.getElementById(tabId).classList.add('active');
+      evt.currentTarget.classList.add('active');
+    }
+
+    function previewImage(event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          currentFotoBase64 = e.target.result;
+          const imgPreview = document.getElementById('imgPreview');
+          imgPreview.src = currentFotoBase64;
+          imgPreview.style.display = 'block';
+          document.getElementById('infoFoto').textContent = 'Foto dipilih: ' + file.name;
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function simpanInfo(event) {
+      event.preventDefault();
+      const nama = document.getElementById('namaEvent').value;
+      sistemKompetisiTerpilih = document.getElementById('sistemKompetisi').value;
+      document.getElementById('infoSistemKompetisi').textContent = 'Sistem Kompetisi: ' + sistemKompetisiTerpilih;
+      alert('Informasi Event "' + nama + '" disimpan!');
+    }
+
+    function daftarPeserta(event) {
+      event.preventDefault();
+      const nama = document.getElementById('namaPeserta').value;
+      const noTelp = document.getElementById('noTelp').value;
+      const alamat = document.getElementById('alamatPeserta').value;
+
+      daftarPesertaList.push(nama);
+
+      const rowKosong = document.getElementById('rowKosong');
+      if (rowKosong) rowKosong.remove();
+
+      const tbody = document.getElementById('tabelPesertaBody');
+      const newRow = document.createElement('tr');
+      const fotoSrc = currentFotoBase64 ? currentFotoBase64 : 'https://via.placeholder.com/40?text=👤';
+
+      newRow.innerHTML = `
+        <td><img src="${fotoSrc}" alt="${nama}" onclick="zoomImage('${fotoSrc}')"></td>
+        <td class="text-left"><strong>${nama}</strong></td>
+        <td>${noTelp}</td>
+        <td class="text-left">${alamat}</td>
+      `;
+      tbody.appendChild(newRow);
+
+      alert('Peserta "' + nama + '" berhasil mendaftar!');
+      document.getElementById('namaPeserta').value = '';
+      document.getElementById('noTelp').value = '';
+      document.getElementById('alamatPeserta').value = '';
+      document.getElementById('imgPreview').style.display = 'none';
+      document.getElementById('infoFoto').textContent = 'Belum ada foto';
+      currentFotoBase64 = '';
+    }
+
+    function acakJadwal() {
+      if (daftarPesertaList.length < 2) {
+        alert('Minimal 2 peserta terdaftar!');
+        return;
+      }
+
+      matchesData = [];
+      let acakPeserta = [...daftarPesertaList];
+      for (let i = acakPeserta.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [acakPeserta[i], acakPeserta[j]] = [acakPeserta[j], acakPeserta[i]];
+      }
+
+      let matchId = 1;
+
+      if (sistemKompetisiTerpilih === 'Setengah Kompetisi') {
+        document.getElementById('areaBracket').style.display = 'none';
+        for (let i = 0; i < acakPeserta.length; i++) {
+          for (let j = i + 1; j < acakPeserta.length; j++) {
+            matchesData.push({
+              id: matchId++,
+              teamA: acakPeserta[i],
+              teamB: acakPeserta[j],
+              scoreA: '',
+              scoreB: '',
+              isBye: false
+            });
+          }
+        }
+      } else {
+        document.getElementById('areaBracket').style.display = 'block';
+        for (let i = 0; i < acakPeserta.length; i += 2) {
+          if (i + 1 < acakPeserta.length) {
+            matchesData.push({
+              id: matchId++,
+              teamA: acakPeserta[i],
+              teamB: acakPeserta[j = i + 1],
+              scoreA: '',
+              scoreB: '',
+              isBye: false
+            });
+          } else {
+            matchesData.push({
+              id: matchId++,
+              teamA: acakPeserta[i],
+              teamB: '-',
+              scoreA: '-',
+              scoreB: '-',
+              isBye: true,
+              winner: acakPeserta[i]
+            });
+          }
+        }
+      }
+
+      renderJadwalDanBracket();
+      perbaruiKlasemen();
+    }
+
+    function simpanSkor(id) {
+      const match = matchesData.find(m => m.id === id);
+      if (!match) return;
+
+      const scoreAVal = document.getElementById(`scoreA_${id}`).value;
+      const scoreBVal = document.getElementById(`scoreB_${id}`).value;
+
+      if (scoreAVal === '' || scoreBVal === '') {
+        alert('Harap masukkan kedua skor!');
+        return;
+      }
+
+      const sA = parseInt(scoreAVal);
+      const sB = parseInt(scoreBVal);
+
+      if (sistemKompetisiTerpilih === 'Sistem Gugur' && sA === sB) {
+        alert('Sistem Gugur tidak boleh Seri/Draw!');
+        return;
+      }
+
+      match.scoreA = sA;
+      match.scoreB = sB;
+
+      if (sA > sB) match.winner = match.teamA;
+      else if (sB > sA) match.winner = match.teamB;
+      else match.winner = 'Draw';
+
+      alert(`Skor Match ${id} berhasil disimpan!`);
+      renderJadwalDanBracket();
+      perbaruiKlasemen();
+    }
+
+    function renderJadwalDanBracket() {
+      const kontainer = document.getElementById('kontainerJadwal');
+      kontainer.innerHTML = '';
+
+      matchesData.forEach(m => {
+        if (m.isBye) {
+          kontainer.innerHTML += `
+            <div class="match-card">
+              <div class="match-header">Match ${m.id} - Bye</div>
+              <div class="match-body">
+                <span class="match-team">${m.teamA}</span>
+                <span style="color:#38ef7d; font-weight:bold; font-size:12px;">LOLOS OTOMATIS</span>
+              </div>
+            </div>
+          `;
+        } else {
+          kontainer.innerHTML += `
+            <div class="match-card">
+              <div class="match-header">Match ${m.id}</div>
+              <div class="match-body">
+                <span class="match-team">${m.teamA}</span>
+                <div class="match-input-group">
+                  <input type="number" id="scoreA_${m.id}" class="score-input" value="${m.scoreA}" min="0">
+                  <span style="font-weight:bold;">:</span>
+                  <input type="number" id="scoreB_${m.id}" class="score-input" value="${m.scoreB}" min="0">
+                </div>
+                <span class="match-team">${m.teamB}</span>
+              </div>
+              <button class="btn btn-green btn-sm" onclick="simpanSkor(${m.id})">💾 Simpan Skor</button>
+            </div>
+          `;
+        }
+      });
+
+      // Render Bracket Visual
+      if (sistemKompetisiTerpilih === 'Sistem Gugur') {
+        const bracketContainer = document.getElementById('bracketContainer');
+        bracketContainer.innerHTML = '';
+
+        let r1HTML = `<div class="bracket-round"><div class="bracket-round-title">Babak 1</div>`;
+        let pNextRound = [];
+
+        matchesData.forEach(m => {
+          if (m.isBye) {
+            r1HTML += `
+              <div class="bracket-match">
+                <div class="bracket-item winner">${m.teamA} (BYE)</div>
+              </div>
+            `;
+            pNextRound.push(m.teamA);
+          } else {
+            const classA = m.winner === m.teamA ? 'winner' : '';
+            const classB = m.winner === m.teamB ? 'winner' : '';
+
+            r1HTML += `
+              <div class="bracket-match">
+                <div class="bracket-item ${classA}">${m.teamA} <span>${m.scoreA !== '' ? m.scoreA : ''}</span></div>
+                <div class="bracket-item ${classB}">${m.teamB} <span>${m.scoreB !== '' ? m.scoreB : ''}</span></div>
+              </div>
+            `;
+            pNextRound.push(m.winner ? m.winner : `Pemenang Match ${m.id}`);
+          }
+        });
+        r1HTML += `</div>`;
+        bracketContainer.innerHTML += r1HTML;
+
+        // Visual Babak Final / Selanjutnya
+        if (pNextRound.length > 1) {
+          let r2HTML = `<div class="bracket-round"><div class="bracket-round-title">Final</div>`;
+          for (let k = 0; k < pNextRound.length; k += 2) {
+            r2HTML += `
+              <div class="bracket-match">
+                <div class="bracket-item">${pNextRound[k]}</div>
+                <div class="bracket-item">${pNextRound[k+1] || '-'}</div>
+              </div>
+            `;
+          }
+          r2HTML += `</div>`;
+          bracketContainer.innerHTML += r2HTML;
+        }
+      }
+    }
+
+    function perbaruiKlasemen() {
+      let stats = {};
+      daftarPesertaList.forEach(p => {
+        stats[p] = { played: 0, won: 0, draw: 0, lost: 0, gd: 0, pts: 0 };
+      });
+
+      matchesData.forEach(m => {
+        if (!m.isBye && m.scoreA !== '' && m.scoreB !== '') {
+          const pA = m.teamA;
+          const pB = m.teamB;
+          const sA = parseInt(m.scoreA);
+          const sB = parseInt(m.scoreB);
+
+          stats[pA].played++;
+          stats[pB].played++;
+
+          stats[pA].gd += (sA - sB);
+          stats[pB].gd += (sB - sA);
+
+          if (sA > sB) {
+            stats[pA].won++;
+            stats[pA].pts += 3;
+            stats[pB].lost++;
+          } else if (sB > sA) {
+            stats[pB].won++;
+            stats[pB].pts += 3;
+            stats[pA].lost++;
+          } else {
+            stats[pA].draw++;
+            stats[pB].draw++;
+            stats[pA].pts += 1;
+            stats[pB].pts += 1;
+          }
+        }
+      });
+
+      let sorted = Object.keys(stats).map(key => ({ name: key, ...stats[key] }));
+      sorted.sort((a, b) => b.pts - a.pts || b.gd - a.gd);
+
+      const tbody = document.getElementById('tabelKlasemenBody');
+      tbody.innerHTML = '';
+
+      sorted.forEach(s => {
+        tbody.innerHTML += `
+          <tr>
+            <td class="text-left"><strong>${s.name}</strong></td>
+            <td>${s.played}</td>
+            <td>${s.won}</td>
+            <td>${s.draw}</td>
+            <td>${s.lost}</td>
+            <td>${s.gd > 0 ? '+' + s.gd : s.gd}</td>
+            <td><strong style="color: #38ef7d;">${s.pts}</strong></td>
+          </tr>
+        `;
+      });
+    }
+
+    function zoomImage(src) {
+      if (!src || src.includes('placeholder')) return;
+      document.getElementById('imgModal').style.display = 'flex';
+      document.getElementById('modalImg').src = src;
+    }
+
+    function closeZoomModal() {
+      document.getElementById('imgModal').style.display = 'none';
+    }
+  </script>
+</body>
+</html>
+
