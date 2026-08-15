@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistem Turnamen Badminton Realtime</title>
+  
+  <!-- Firebase SDK Version 8 -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+  <style>
+    :root { --primary: #0d6efd; --success: #198754; --warning: #ffc107; --danger: #dc3545; }
+    * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; }
+    body { background-color: #f8f9fa; color: #212529; padding: 15px; }
+
+    /* Login Modal Overlay */
+    #loginModal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+    .login-box { background: white; padding: 30px; border-radius: 12px; width: 90%; max-width: 400px; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+    .login-box input { width: 100%; padding: 12px; border: 2px solid #ced4da; border-radius: 8px; font-size: 16px; margin: 15px 0; text-align: center; font-weight: bold; }
+    .login-box button { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
+
+    /* Navigation & Header */
+    header { background: white; padding: 15px 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+    .user-tag { background: #e9ecef; padding: 5px 12px; border-radius: 20px; font-size: 14px; font-weight: bold; }
+    .btn-logout { background: var(--danger); color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; }
+
+    /* Layout Main */
+    .container { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 1fr; gap: 20px; }
+    @media(min-width: 992px) { .container { grid-template-columns: 1fr 2fr; } }
+
+    .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 20px; }
+    .card h3 { margin-bottom: 15px; border-bottom: 2px solid #e9ecef; padding-bottom: 8px; display: flex; align-items: center; justify-content: space-between; }
+    
+    /* Form Elements */
+    .form-group { margin-bottom: 12px; }
+    .form-group label { display: block; font-size: 14px; margin-bottom: 5px; font-weight: 600; }
+    .form-group input, .form-group select { width: 100%; padding: 8px 12px; border: 1px solid #ced4da; border-radius: 6px; }
+    .btn { padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-success { background: var(--success); color: white; }
+
+    /* Tables & Score List */
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { padding: 10px; border-bottom: 1px solid #dee2e6; text-align: left; font-size: 14px; }
+    th { background: #f1f3f5; }
+    
+    .match-card { background: #fff; border: 1px solid #e9ecef; border-left: 5px solid var(--primary); padding: 15px; border-radius: 8px; margin-bottom: 15px; }
+    .match-header { font-size: 12px; color: #6c757d; font-weight: bold; margin-bottom: 8px; display: flex; justify-content: space-between; }
+    .score-board { display: flex; justify-content: space-between; align-items: center; margin: 10px 0; }
+    .team-name { font-weight: bold; width: 40%; }
+    .score-input { width: 50px !important; text-align: center; padding: 5px; font-size: 16px; }
+    .badge-status { padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
+    .bg-ongoing { background: #fff3cd; color: #664d03; }
+    .bg-finished { background: #d1e7dd; color: #0f5132; }
+
+    /* Admin Only Elements */
+    .admin-only, .panitia-only { display: none; }
+  </style>
+</head>
+<body>
+
+  <!-- MODAL LOGIN LISENSI -->
+  <div id="loginModal">
+    <div class="login-box">
+      <h2>Badminton App</h2>
+      <p style="color:#6c757d; font-size: 14px;">Masukkan Lisensi Akses</p>
+      <input type="text" id="licenseInput" placeholder="Contoh: ADMIN123" autocomplete="off">
+      <button onclick="checkLicense()">Masuk Aplikasi</button>
+    </div>
+  </div>
+
+  <!-- HEADER -->
+  <header>
+    <h2>🏸 Turnamen Badminton Realtime</h2>
+    <div>
+      <span class="user-tag">Lisensi: <b id="userCode">-</b> (<span id="userRole">-</span>)</span>
+      <button class="btn-logout" onclick="logout()">Keluar</button>
+    </div>
+  </header>
+
+  <!-- UTAMA -->
+  <div class="container">
+    
+    <!-- KOLOM KIRI: FORM AKSES (ADMIN & WASIT) -->
+    <div>
+      <!-- PANEL ADMIN: TAMBAH PESERTA -->
+      <div class="card admin-only" id="sectionTambahPeserta">
+        <h3>➕ Tambah Peserta Baru</h3>
+        <div class="form-group">
+          <label>Nama Pemain / Pasangan</label>
+          <input type="text" id="namaPeserta" placeholder="Contoh: Kevin / Marcus">
+        </div>
+        <div class="form-group">
+          <label>Kategori</label>
+          <select id="kategoriPeserta">
+            <option value="Ganda Putra">Ganda Putra</option>
+            <option value="Tunggal Putra">Tunggal Putra</option>
+            <option value="Ganda Campuran">Ganda Campuran</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" onclick="tambahPeserta()">Simpan Peserta</button>
+      </div>
+
+      <!-- PANEL ADMIN: BUAT JADWAL LAGA -->
+      <div class="card admin-only" id="sectionBuatJadwal">
+        <h3>📅 Buat Jadwal Pertandingan</h3>
+        <div class="form-group">
+          <label>Tim A (Tuan Rumah)</label>
+          <input type="text" id="timA" placeholder="Nama Pemain A">
+        </div>
+        <div class="form-group">
+          <label>Tim B (Lawan)</label>
+          <input type="text" id="timB" placeholder="Nama Pemain B">
+        </div>
+        <div class="form-group">
+          <label>Lapangan / Babak</label>
+          <input type="text" id="lapanganInfo" placeholder="Contoh: Lapangan 1 - Semifinal">
+        </div>
+        <button class="btn btn-success" onclick="tambahJadwal()">Rilis Pertandingan</button>
+      </div>
+
+      <!-- DAFTAR PESERTA (SEMUA BISA LIHAT) -->
+      <div class="card">
+        <h3>👥 Daftar Peserta Terdaftar</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Nama Pemain</th>
+              <th>Kategori</th>
+            </tr>
+          </thead>
+          <tbody id="tabelPeserta">
+            <tr><td colspan="3" style="text-align:center;">Memuat data...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- KOLOM KANAN: PAPAN SKOR & JADWAL REALTIME -->
+    <div>
+      <div class="card">
+        <h3>📊 Papan Skor & Jadwal Pertandingan</h3>
+        <div id="containerPertandingan">
+          <p style="text-align:center; color:#6c757d;">Belum ada pertandingan dijadwalkan.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // 1. KONFIGURASI FIREBASE
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      databaseURL: "https://turnamen-badminton-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "turnamen-badminton"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // Event default yang aktif
+    const CURRENT_EVENT = "PORDA-2026";
+    let currentRole = "penonton";
+
+    // 2. CEK LISENSI LOGIN
+    function checkLicense() {
+      const code = document.getElementById('licenseInput').value.trim();
+      if (!code) return alert("Masukkan kode lisensi!");
+
+      db.ref('licenses/' + code).once('value').then(snapshot => {
+        if (snapshot.exists()) {
+          const data = snapshot.val();
+          if (data.status === 'active') {
+            currentRole = data.role;
+            document.getElementById('userCode').innerText = code;
+            document.getElementById('userRole').innerText = currentRole.toUpperCase();
+            document.getElementById('loginModal').style.display = 'none';
+
+            // Tampilkan fitur berdasarkan role
+            applyAccessControl();
+            // Load data dari Firebase
+            listenDataRealtime();
+          } else {
+            alert("Lisensi ini diblokir / tidak aktif!");
+          }
+        } else {
+          alert("Kode lisensi tidak valid!");
+        }
+      });
+    }
+
+    // 3. ATUR MENU TERSEMBUNYI SESUAI HAK AKSES
+    function applyAccessControl() {
+      if (currentRole === 'admin') {
+        document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'block');
+        document.querySelectorAll('.panitia-only').forEach(el => el.style.display = 'block');
+      } else if (currentRole === 'panitia' || currentRole === 'wasit') {
+        document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
+        document.querySelectorAll('.panitia-only').forEach(el => el.style.display = 'block');
+      } else {
+        // Penonton
+        document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
+        document.querySelectorAll('.panitia-only').forEach(el => el.style.display = 'none');
+      }
+    }
+
+    // 4. LOGIKA FIREBASE: TAMBAH PESERTA (ADMIN)
+    function tambahPeserta() {
+      const nama = document.getElementById('namaPeserta').value;
+      const kategori = document.getElementById('kategoriPeserta').value;
+      if (!nama) return alert("Nama wajib diisi!");
+
+      db.ref(`events/${CURRENT_EVENT}/peserta`).push({
+        nama: nama,
+        kategori: kategori
+      }).then(() => {
+        document.getElementById('namaPeserta').value = '';
+        alert("Peserta berhasil ditambahkan!");
+      });
+    }
+
+    // 5. LOGIKA FIREBASE: TAMBAH JADWAL (ADMIN)
+    function tambahJadwal() {
+      const timA = document.getElementById('timA').value;
+      const timB = document.getElementById('timB').value;
+      const lapangan = document.getElementById('lapanganInfo').value;
+      if (!timA || !timB) return alert("Nama kedua tim wajib diisi!");
+
+      db.ref(`events/${CURRENT_EVENT}/matches`).push({
+        timA: timA,
+        timB: timB,
+        skorA: 0,
+        skorB: 0,
+        lapangan: lapangan || "Lapangan Utama",
+        status: "Berlangsung"
+      }).then(() => {
+        document.getElementById('timA').value = '';
+        document.getElementById('timB').value = '';
+        document.getElementById('lapanganInfo').value = '';
+        alert("Jadwal dirilis!");
+      });
+    }
+
+    // 6. LOGIKA FIREBASE: INPUT/UPDATE SKOR (PANITIA & ADMIN)
+    function updateSkor(matchId, scoreA, scoreB, status) {
+      db.ref(`events/${CURRENT_EVENT}/matches/${matchId}`).update({
+        skorA: parseInt(scoreA) || 0,
+        skorB: parseInt(scoreB) || 0,
+        status: status
+      });
+    }
+
+    // 7. REALTIME LISTENER (UPDATE OTOMATIS SAAT ADA PERUBAHAN DATA)
+    function listenDataRealtime() {
+      // Baca Peserta
+      db.ref(`events/${CURRENT_EVENT}/peserta`).on('value', snapshot => {
+        const tbody = document.getElementById('tabelPeserta');
+        tbody.innerHTML = '';
+        let no = 1;
+        snapshot.forEach(child => {
+          const p = child.val();
+          tbody.innerHTML += `<tr><td>${no++}</td><td><b>${p.nama}</b></td><td>${p.kategori}</td></tr>`;
+        });
+        if (no === 1) tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">Belum ada peserta.</td></tr>';
+      });
+
+      // Baca Match & Skor
+      db.ref(`events/${CURRENT_EVENT}/matches`).on('value', snapshot => {
+        const container = document.getElementById('containerPertandingan');
+        container.innerHTML = '';
+
+        snapshot.forEach(child => {
+          const key = child.key;
+          const m = child.val();
+          const isFinished = m.status === 'Selesai';
+
+          // Tampilan khusus jika user wasit/admin (bisa edit skor)
+          const isEditable = (currentRole === 'admin' || currentRole === 'panitia' || currentRole === 'wasit');
+
+          container.innerHTML += `
+            <div class="match-card">
+              <div class="match-header">
+                <span>📍 ${m.lapangan}</span>
+                <span class="badge-status ${isFinished ? 'bg-finished' : 'bg-ongoing'}">${m.status}</span>
+              </div>
+              <div class="score-board">
+                <span class="team-name">${m.timA}</span>
+                ${isEditable ? 
+                  `<input type="number" class="score-input" value="${m.skorA}" onchange="updateSkor('${key}', this.value, document.getElementById('skorB_${key}').value, document.getElementById('status_${key}').value)">` 
+                  : `<h2>${m.skorA}</h2>`}
+                <span style="font-weight:bold; font-size: 18px;">VS</span>
+                ${isEditable ? 
+                  `<input type="number" id="skorB_${key}" class="score-input" value="${m.skorB}" onchange="updateSkor('${key}', document.querySelector('[onchange*=\"${key}\"]').value, this.value, document.getElementById('status_${key}').value)">` 
+                  : `<h2>${m.skorB}</h2>`}
+                <span class="team-name" style="text-align:right;">${m.timB}</span>
+              </div>
+              ${isEditable ? `
+                <div style="margin-top: 10px; display: flex; gap: 10px; align-items: center;">
+                  <label style="font-size:12px;">Status:</label>
+                  <select id="status_${key}" onchange="updateSkor('${key}', document.querySelector('[onchange*=\"${key}\"]').value, document.getElementById('skorB_${key}').value, this.value)">
+                    <option value="Berlangsung" ${m.status === 'Berlangsung' ? 'selected' : ''}>Berlangsung</option>
+                    <option value="Selesai" ${m.status === 'Selesai' ? 'selected' : ''}>Selesai</option>
+                  </select>
+                </div>
+              ` : ''}
+            </div>
+          `;
+        });
+      });
+    }
+
+    function logout() {
+      location.reload();
+    }
+  </script>
+</body>
+</html>
+
