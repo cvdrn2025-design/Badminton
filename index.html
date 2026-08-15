@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aplikasi Turnamen Bulutangkis Real-time</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800&family=Teko:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Montserrat', sans-serif; }
+    body { background-color: #0f172a; padding: 15px; color: #f8fafc; }
+    .container { max-width: 550px; margin: 0 auto; padding-top: 10px; }
+    
+    .nav-tabs { display: flex; gap: 8px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 5px; }
+    .tab-btn { flex: 1; padding: 10px 14px; border: 1px solid #334155; background: #1e293b; color: #94a3b8; border-radius: 8px; font-size: 13px; font-weight: 800; text-transform: uppercase; font-style: italic; cursor: pointer; white-space: nowrap; transition: all 0.25s; }
+    .tab-btn.active { background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%); color: white; border-color: transparent; box-shadow: 0 4px 15px rgba(255, 65, 108, 0.4); }
+    
+    .card { background: #1e293b; padding: 22px; border-radius: 14px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); margin-bottom: 20px; border: 1px solid #334155; }
+    .card h2 { font-family: 'Teko', sans-serif; font-size: 26px; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 15px; color: #f1f5f9; border-left: 4px solid #ff4b2b; padding-left: 10px; }
+    
+    .form-group { margin-bottom: 14px; }
+    .form-control { width: 100%; padding: 12px 15px; background-color: #0f172a; border: 1px solid #334155; border-radius: 8px; font-size: 14px; color: #fff; outline: none; }
+    .form-control:focus { border-color: #ff4b2b; }
+    
+    .btn { padding: 10px 16px; border: none; border-radius: 8px; font-weight: 800; font-size: 13px; text-transform: uppercase; font-style: italic; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.25s; }
+    .btn-red { background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%); color: white; }
+    .btn-green { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); color: #0f172a; }
+    .btn-blue { background: linear-gradient(135deg, #00c6ff 0%, #0072ff 100%); color: white; }
+    .btn-sm { padding: 6px 10px; font-size: 11px; }
+    .btn-full { width: 100%; }
+    
+    .table-container { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
+    th, td { padding: 10px 12px; text-align: center; border-bottom: 1px solid #334155; }
+    th { background-color: #0f172a; color: #ff4b2b; font-family: 'Teko', sans-serif; font-size: 18px; }
+    td.text-left { text-align: left; }
+    
+    .player-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid #00c6ff; vertical-align: middle; margin-right: 8px; background: #0f172a; }
+    .match-card { background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 12px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 10px; }
+    .match-header { font-size: 11px; color: #ff4b2b; font-weight: 800; text-transform: uppercase; border-bottom: 1px dashed #334155; padding-bottom: 5px; display: flex; justify-content: space-between; }
+    .match-body { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .match-team { font-weight: bold; font-size: 13px; flex: 1; text-align: center; display: flex; align-items: center; justify-content: center; gap: 6px; }
+    .score-input { width: 48px; height: 35px; text-align: center; background: #1e293b; border: 1px solid #334155; color: #fff; border-radius: 6px; font-weight: bold; font-size: 14px; }
+    
+    .winner-banner { background: rgba(56, 239, 125, 0.15); border: 1px solid #38ef7d; color: #38ef7d; padding: 6px 10px; border-radius: 6px; text-align: center; font-size: 12px; font-weight: bold; }
+
+    .rank-1 { background: rgba(255, 215, 0, 0.15) !important; color: #ffd700; }
+    .rank-2 { background: rgba(192, 192, 192, 0.15) !important; color: #c0c0c0; }
+    .rank-3 { background: rgba(205, 127, 50, 0.15) !important; color: #cd7f32; }
+    
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .sync-badge { background: #11998e; color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; }
+    
+    .camera-container { display: none; flex-direction: column; align-items: center; gap: 10px; margin-top: 10px; background: #0f172a; padding: 10px; border-radius: 8px; border: 1px dashed #334155; }
+    #videoElement { width: 100%; max-width: 320px; height: auto; border-radius: 8px; background: #000; border: 2px solid #00c6ff; }
+    #previewPhoto { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid #38ef7d; display: none; margin: 10px auto 0 auto; }
+  </style>
+</head>
+<body>
+
+  <!-- MODAL LISENSI -->
+  <div id="licenseModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15,23,42,0.95); z-index: 9999; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(8px);">
+    <div style="background: #1e293b; border: 1px solid #334155; width: 90%; max-width: 400px; padding: 25px; border-radius: 14px; text-align: center;">
+      <h2 style="color: #00c6ff; font-family: 'Teko', sans-serif; font-size: 28px; margin-bottom: 8px;">Aktivasi Aplikasi</h2>
+      <p style="color: #94a3b8; font-size: 12px; margin-bottom: 20px;">Masukkan kode lisensi resmi Anda.</p>
+      <input type="text" id="licenseInput" class="form-control" placeholder="Contoh: TESAPK0001" style="text-align: center; text-transform: uppercase; font-weight: bold; margin-bottom: 15px;">
+      <button type="button" class="btn btn-green btn-full" onclick="verifikasiLisensi()">AKTIFKAN LISENSI</button>
+      <p id="licenseError" style="color: #ff416c; font-size: 12px; margin-top: 12px; font-weight: bold; display: none;"></p>
+    </div>
+  </div>
+
+  <div class="container">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+      <span class="sync-badge" id="statusSync">🔄 Realtime Sync Active</span>
+      <span style="font-size: 11px; color: #94a3b8;">Event ID: <strong id="displayEventId" style="color: #00c6ff;">-</strong></span>
+    </div>
+
+    <!-- Tab Navigasi -->
+    <div class="nav-tabs">
+      <button class="tab-btn active" onclick="openTab('pendaftaran', event)">📋 Pendaftaran</button>
+      <button class="tab-btn" onclick="openTab('jadwal', event)">🏸 Jadwal & Skor</button>
+      <button class="tab-btn" onclick="openTab('skor', event)">🏆 Klasemen</button>
+    </div>
+
+    <!-- Tab Pendaftaran -->
+    <div id="pendaftaran" class="tab-content active">
+      <form class="card" onsubmit="simpanInfo(event)">
+        <h2>Pengaturan Event / Room Sync</h2>
+        <div class="form-group">
+          <input type="text" id="eventIdInput" class="form-control" placeholder="Kode Ruang Event (misal: EVENT-SMD-01)" required>
+        </div>
+        <div class="form-group">
+          <input type="text" id="namaEvent" class="form-control" placeholder="Nama Turnamen" required>
+        </div>
+        <div class="form-group">
+          <select id="sistemKompetisi" class="form-control" required>
+            <option value="" disabled selected>-- Pilih Sistem --</option>
+            <option value="Sistem Gugur">Sistem Gugur (Knockout)</option>
+            <option value="Setengah Kompetisi">Setengah Kompetisi (Round Robin)</option>
+          </select>
+        </div>
+        <button type="submit" class="btn btn-red">Hubungkan / Simpan Event</button>
+      </form>
+
+      <form class="card" onsubmit="daftarPeserta(event)">
+        <h2>Pendaftaran Pemain</h2>
+        <div class="form-group">
+          <input type="text" id="namaPeserta" class="form-control" placeholder="Nama Pemain / Pasangan" required>
+        </div>
+        <div class="form-group">
+          <input type="text" id="alamatPeserta" class="form-control" placeholder="Klub / Asal PB" required>
+        </div>
+        
+        <div class="form-group">
+          <label style="font-size: 11px; color: #94a3b8; display: block; margin-bottom: 6px;">Foto Pemain:</label>
+          <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+            <button type="button" class="btn btn-blue btn-sm" style="flex:1;" onclick="bukaKamera()">📷 Ambil Foto (Kamera)</button>
+            <label class="btn btn-red btn-sm" style="flex:1; text-align:center; cursor:pointer;">
+              📁 Upload File
+              <input type="file" id="fotoPeserta" accept="image/*" style="display:none;" onchange="handleFileUpload(event)">
+            </label>
+          </div>
+
+          <div id="cameraArea" class="camera-container">
+            <video id="videoElement" autoplay playsinline></video>
+            <div style="display:flex; gap:6px;">
+              <button type="button" class="btn btn-green btn-sm" onclick="tangkapFoto()">📸 Ambil Gambar</button>
+              <button type="button" class="btn btn-red btn-sm" onclick="tutupKamera()">❌ Batal</button>
+            </div>
+          </div>
+
+          <img id="previewPhoto" alt="Preview Foto">
+          <canvas id="canvasElement" style="display:none;"></canvas>
+        </div>
+
+        <button type="submit" class="btn btn-green btn-full">Tambah Pemain</button>
+      </form>
+
+      <div class="card">
+        <h2>Daftar Pemain Real-time</h2>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th class="text-left">Pemain</th>
+                <th class="text-left">Klub/PB</th>
+              </tr>
+            </thead>
+            <tbody id="tabelPesertaBody">
+              <tr><td colspan="2" style="color:#94a3b8; font-style:italic;">Belum ada data.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab Jadwal -->
+    <div id="jadwal" class="tab-content">
+      <div class="card">
+        <h2>Jadwal Pertandingan</h2>
+        <button type="button" class="btn btn-green btn-full" onclick="acakJadwal()" style="margin-bottom: 15px;">
+          🎲 Acak & Susun Match (Master Panitia)
+        </button>
+        <div id="kontainerJadwal">
+          <p style="color:#94a3b8; font-style:italic; text-align:center;">Jadwal belum disusun.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab Klasemen -->
+    <div id="skor" class="tab-content">
+      <div class="card">
+        <h2>Papan Klasemen Real-time</h2>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Pos</th>
+                <th class="text-left">Pemain</th>
+                <th>Main</th>
+                <th>Menang</th>
+                <th>Kalah</th>
+                <th>PTS</th>
+              </tr>
+            </thead>
+            <tbody id="tabelKlasemenBody">
+              <tr><td colspan="6" style="color:#94a3b8; font-style:italic;">Belum ada data.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCMvemJT1b6fy5D_s8Hl9WOwXZmsZ096jE",
+      authDomain: "drawing-match-ac69a.firebaseapp.com",
+      databaseURL: "https://turnamen-badminton-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "drawing-match-ac69a",
+      storageBucket: "drawing-match-ac69a.firebasestorage.app",
+      messagingSenderId: "22800670068",
+      appId: "1:22800670068:web:6bc373b99331c8e0bca021"
+    };
+
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    let currentEventId = localStorage.getItem('active_event_id') || 'DEFAULT-EVENT';
+    let eventData = { info: {}, peserta: [], matches: [] };
+    let capturedImageData = "";
+    let mediaStream = null;
+
+    const defaultAvatar = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2394a3b8'%3E%3Cpath d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z'/%3E%3C/svg%3E";
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const activeSession = localStorage.getItem('active_license_key');
+      if (activeSession) {
+        document.getElementById('licenseModal').style.display = 'none';
+        initRealtimeSync();
+      } else {
+        document.getElementById('licenseModal').style.display = 'flex';
+      }
+    });
+
+    function verifikasiLisensi() {
+      const inputKey = document.getElementById('licenseInput').value.trim().toUpperCase();
+      const errorMsg = document.getElementById('licenseError');
+      if (!inputKey) return;
+
+      const masterKeys = ["TESAPK0001", "DEMO2026", "ADMIN123"];
+      if (masterKeys.includes(inputKey)) {
+        localStorage.setItem('active_license_key', inputKey);
+        document.getElementById('licenseModal').style.display = 'none';
+        initRealtimeSync();
+        return;
+      }
+
+      db.ref('licenses/' + inputKey).once('value').then((snapshot) => {
+        if (snapshot.exists() && snapshot.val().status === 'active') {
+          db.ref('licenses/' + inputKey).update({ status: 'used', activated_at: new Date().toISOString() });
+          localStorage.setItem('active_license_key', inputKey);
+          document.getElementById('licenseModal').style.display = 'none';
+          initRealtimeSync();
+        } else {
+          errorMsg.textContent = "❌ Kode lisensi tidak valid atau sudah dipakai!";
+          errorMsg.style.display = "block";
+        }
+      });
+    }
+
+    function initRealtimeSync() {
+      document.getElementById('eventIdInput').value = currentEventId;
+      document.getElementById('displayEventId').textContent = currentEventId;
+
+      db.ref('events/' + currentEventId).on('value', (snapshot) => {
+        if (snapshot.exists()) {
+          eventData = snapshot.val();
+          if (!eventData.peserta) eventData.peserta = [];
+          if (!eventData.matches) eventData.matches = [];
+        } else {
+          eventData = { info: {}, peserta: [], matches: [] };
+        }
+        renderUI();
+      });
+    }
+
+    async function bukaKamera() {
+      const cameraArea = document.getElementById('cameraArea');
+      const video = document.getElementById('videoElement');
+      try {
+        mediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
+        video.srcObject = mediaStream;
+        cameraArea.style.display = 'flex';
+      } catch (err) {
+        alert('Tidak dapat mengakses kamera! Pastikan izin kamera telah diberikan pada browser.');
+      }
+    }
+
+    function tutupKamera() {
+      if (mediaStream) {
+        mediaStream.getTracks().forEach(track => track.stop());
+        mediaStream = null;
+      }
+      document.getElementById('cameraArea').style.display = 'none';
+    }
+
+    function tangkapFoto() {
+      const video = document.getElementById('videoElement');
+      const canvas = document.getElementById('canvasElement');
+      const preview = document.getElementById('previewPhoto');
+
+      canvas.width = 300;
+      canvas.height = 300;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(video, 0, 0, 300, 300);
+
+      capturedImageData = canvas.toDataURL('image/jpeg', 0.8);
+      preview.src = capturedImageData;
+      preview.style.display = 'block';
+
+      tutupKamera();
+    }
+
+    function handleFileUpload(event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          capturedImageData = e.target.result;
+          const preview = document.getElementById('previewPhoto');
+          preview.src = capturedImageData;
+          preview.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function simpanInfo(e) {
+      e.preventDefault();
+      const newEventId = document.getElementById('eventIdInput').value.trim().toUpperCase();
+      if (!newEventId) return;
+
+      currentEventId = newEventId;
+      localStorage.setItem('active_event_id', currentEventId);
+
+      db.ref('events/' + currentEventId + '/info').set({
+        nama: document.getElementById('namaEvent').value,
+        sistem: document.getElementById('sistemKompetisi').value
+      });
+
+      initRealtimeSync();
+      alert('Tersambung ke Room Event: ' + currentEventId);
+    }
+
+    function daftarPeserta(e) {
+      e.preventDefault();
+      const nama = document.getElementById('namaPeserta').value;
+      const alamat = document.getElementById('alamatPeserta').value;
+      const fotoFinal = capturedImageData || defaultAvatar;
+
+      const listPeserta = eventData.peserta || [];
+      listPeserta.push({ nama, alamat, foto: fotoFinal });
+      
+      db.ref('events/' + currentEventId + '/peserta').set(listPeserta);
+
+      document.getElementById('namaPeserta').value = '';
+      document.getElementById('alamatPeserta').value = '';
+      document.getElementById('fotoPeserta').value = '';
+      document.getElementById('previewPhoto').style.display = 'none';
+      capturedImageData = "";
+    }
+
+    function acakJadwal() {
+      const listPeserta = eventData.peserta || [];
+      if (listPeserta.length < 2) { alert('Minimal 2 pemain terdaftar!'); return; }
+
+      let shuffled = [...listPeserta].sort(() => Math.random() - 0.5);
+      let matches = [];
+      let matchId = 1;
+
+      for (let i = 0; i < shuffled.length; i += 2) {
+        if (i + 1 < shuffled.length) {
+          matches.push({
+            id: matchId++,
+            teamA: shuffled[i].nama,
+            fotoA: shuffled[i].foto || defaultAvatar,
+            teamB: shuffled[i+1].nama,
+            fotoB: shuffled[i+1].foto || defaultAvatar,
+            scoreA: '', scoreB: '', winner: ''
+          });
+        }
+      }
+
+      db.ref('events/' + currentEventId + '/matches').set(matches);
+    }
+
+    function simpanSkor(id) {
+      const sA = document.getElementById(`scoreA_${id}`).value;
+      const sB = document.getElementById(`scoreB_${id}`).value;
+      if (sA === '' || sB === '' || sA === sB) { alert('Poin harus diisi dan tidak boleh seri!'); return; }
+
+      const idx = eventData.matches.findIndex(m => m.id === id);
+      if (idx !== -1) {
+        const valA = parseInt(sA);
+        const valB = parseInt(sB);
+        eventData.matches[idx].scoreA = valA;
+        eventData.matches[idx].scoreB = valB;
+        eventData.matches[idx].winner = valA > valB ? eventData.matches[idx].teamA : eventData.matches[idx].teamB;
+        db.ref('events/' + currentEventId + '/matches').set(eventData.matches);
+      }
+    }
+
+    function renderUI() {
+      // 1. Render Tabel Peserta
+      const tbodyP = document.getElementById('tabelPesertaBody');
+      tbodyP.innerHTML = '';
+      const listPeserta = eventData.peserta || [];
+      
+      if (listPeserta.length === 0) {
+        tbodyP.innerHTML = '<tr><td colspan="2" style="color:#94a3b8; font-style:italic;">Belum ada data.</td></tr>';
+      } else {
+        listPeserta.forEach(p => {
+          const img = p.foto || defaultAvatar;
+          tbodyP.innerHTML += `<tr><td class="text-left" style="display:flex; align-items:center;"><img src="${img}" class="player-avatar"><strong>${p.nama}</strong></td><td class="text-left">${p.alamat}</td></tr>`;
+        });
+      }
+
+      // 2. Render Jadwal & Pemenang Pertandingan
+      const containerJ = document.getElementById('kontainerJadwal');
+      containerJ.innerHTML = '';
+      const listMatches = eventData.matches || [];
+
+      if (listMatches.length === 0) {
+        containerJ.innerHTML = '<p style="color:#94a3b8; font-style:italic; text-align:center;">Jadwal belum disusun.</p>';
+      } else {
+        listMatches.forEach(m => {
+          const winnerMarkup = m.winner ? `<div class="winner-banner">👑 PEMENANG: ${m.winner}</div>` : '';
+          containerJ.innerHTML += `
+            <div class="match-card">
+              <div class="match-header"><span>Match ${m.id}</span></div>
+              <div class="match-body">
+                <span class="match-team"><img src="${m.fotoA || defaultAvatar}" class="player-avatar">${m.teamA}</span>
+                <div style="display:flex; gap:4px; align-items:center;">
+                  <input type="number" id="scoreA_${m.id}" class="score-input" value="${m.scoreA !== undefined ? m.scoreA : ''}">
+                  <strong>:</strong>
+                  <input type="number" id="scoreB_${m.id}" class="score-input" value="${m.scoreB !== undefined ? m.scoreB : ''}">
+                </div>
+                <span class="match-team">${m.teamB}<img src="${m.fotoB || defaultAvatar}" class="player-avatar"></span>
+              </div>
+              ${winnerMarkup}
+              <button class="btn btn-green btn-sm" onclick="simpanSkor(${m.id})">💾 Update Poin Real-time</button>
+            </div>
+          `;
+        });
+      }
+
+      // 3. Render Klasemen & Piala Juara
+      let statsMap = {};
+      listPeserta.forEach(p => statsMap[p.nama] = { nama: p.nama, foto: p.foto || defaultAvatar, played:0, won:0, lost:0, pts:0 });
+      
+      listMatches.forEach(m => {
+        if (m.winner) {
+          if (statsMap[m.teamA]) { statsMap[m.teamA].played++; if(m.winner === m.teamA) { statsMap[m.teamA].won++; statsMap[m.teamA].pts++; } else statsMap[m.teamA].lost++; }
+          if (statsMap[m.teamB]) { statsMap[m.teamB].played++; if(m.winner === m.teamB) { statsMap[m.teamB].won++; statsMap[m.teamB].pts++; } else statsMap[m.teamB].lost++; }
+        }
+      });
+
+      // Urutkan Klasemen berdasarkan Poin terbanyak
+      let sortedStats = Object.values(statsMap).sort((a, b) => b.pts - a.pts || b.won - a.won);
+
+      const tbodyK = document.getElementById('tabelKlasemenBody');
+      tbodyK.innerHTML = '';
+
+      if (sortedStats.length === 0) {
+        tbodyK.innerHTML = '<tr><td colspan="6" style="color:#94a3b8; font-style:italic;">Belum ada data.</td></tr>';
+      } else {
+        sortedStats.forEach((p, idx) => {
+          let posDisplay = idx + 1;
+          let rankClass = "";
+
+          if (idx === 0 && p.pts > 0) { posDisplay = "🥇 1"; rankClass = "rank-1"; }
+          else if (idx === 1 && p.pts > 0) { posDisplay = "🥈 2"; rankClass = "rank-2"; }
+          else if (idx === 2 && p.pts > 0) { posDisplay = "🥉 3"; rankClass = "rank-3"; }
+
+          tbodyK.innerHTML += `
+            <tr class="${rankClass}">
+              <td><strong>${posDisplay}</strong></td>
+              <td class="text-left" style="display:flex; align-items:center;">
+                <img src="${p.foto}" class="player-avatar"><strong>${p.nama}</strong>
+              </td>
+              <td>${p.played}</td>
+              <td>${p.won}</td>
+              <td>${p.lost}</td>
+              <td><strong style="color:#38ef7d;">${p.pts}</strong></td>
+            </tr>
+          `;
+        });
+      }
+    }
+
+    function openTab(tabId, evt) {
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+      evt.currentTarget.classList.add('active');
+    }
+  </script>
+</body>
+</html>
+
