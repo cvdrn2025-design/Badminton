@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aplikasi Turnamen Bulutangkis - Bagan Horizontal</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800&family=Teko:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Montserrat', sans-serif; }
+    body { background-color: #0f172a; padding: 15px; color: #f8fafc; }
+    .container { max-width: 1000px; margin: 0 auto; padding-top: 10px; }
+    
+    .nav-tabs { display: flex; gap: 8px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 5px; }
+    .tab-btn { flex: 1; padding: 10px 14px; border: 1px solid #334155; background: #1e293b; color: #94a3b8; border-radius: 8px; font-size: 13px; font-weight: 800; text-transform: uppercase; font-style: italic; cursor: pointer; white-space: nowrap; transition: all 0.25s; }
+    .tab-btn.active { background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%); color: white; border-color: transparent; box-shadow: 0 4px 15px rgba(255, 65, 108, 0.4); }
+    
+    .card { background: #1e293b; padding: 22px; border-radius: 14px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); margin-bottom: 20px; border: 1px solid #334155; }
+    .card h2 { font-family: 'Teko', sans-serif; font-size: 26px; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 15px; color: #f1f5f9; border-left: 4px solid #ff4b2b; padding-left: 10px; }
+    .card h3 { font-family: 'Teko', sans-serif; font-size: 22px; letter-spacing: 1px; text-transform: uppercase; margin: 20px 0 10px 0; color: #00c6ff; border-left: 3px solid #00c6ff; padding-left: 8px;}
+
+    .form-group { margin-bottom: 14px; }
+    .form-control { width: 100%; padding: 12px 15px; background-color: #0f172a; border: 1px solid #334155; border-radius: 8px; font-size: 14px; color: #fff; outline: none; }
+    
+    .btn { padding: 10px 16px; border: none; border-radius: 8px; font-weight: 800; font-size: 13px; text-transform: uppercase; font-style: italic; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.25s; }
+    .btn-red { background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%); color: white; }
+    .btn-green { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); color: #0f172a; }
+    .btn-blue { background: linear-gradient(135deg, #00c6ff 0%, #0072ff 100%); color: white; }
+    .btn-yellow { background: linear-gradient(135deg, #f7b731 0%, #ffa801 100%); color: #0f172a; }
+    .btn-gray { background: linear-gradient(135deg, #4b5563 0%, #1f2937 100%); color: white; }
+    .btn-sm { padding: 6px 10px; font-size: 11px; }
+    .btn-full { width: 100%; }
+    
+    .table-container { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
+    th, td { padding: 10px 12px; text-align: center; border-bottom: 1px solid #334155; }
+    th { background-color: #0f172a; color: #ff4b2b; font-family: 'Teko', sans-serif; font-size: 18px; }
+    td.text-left { text-align: left; }
+    
+    .player-avatar { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; border: 2px solid #00c6ff; vertical-align: middle; margin-right: 6px; background: #0f172a; cursor: pointer; }
+    
+    .match-card { background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 12px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 10px; }
+    .match-header { font-size: 11px; color: #ff4b2b; font-weight: 800; text-transform: uppercase; border-bottom: 1px dashed #334155; padding-bottom: 5px; display: flex; justify-content: space-between; }
+    .match-body { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .match-team { font-weight: bold; font-size: 13px; flex: 1; text-align: center; display: flex; align-items: center; justify-content: center; gap: 6px; }
+    .score-input { width: 45px; height: 35px; text-align: center; background: #1e293b; border: 1px solid #334155; color: #fff; border-radius: 6px; font-weight: bold; font-size: 14px; }
+
+    /* STYLING BAGAN HORIZONTAL */
+    .horizontal-bracket-wrapper { overflow-x: auto; padding: 20px 10px; }
+    .tree-container { display: flex; gap: 45px; align-items: center; min-width: max-content; padding: 10px; }
+    .tree-column { display: flex; flex-direction: column; justify-content: space-around; gap: 24px; position: relative; }
+    .tree-column-header { font-family: 'Teko', sans-serif; font-size: 20px; color: #ffd700; text-align: center; letter-spacing: 1px; margin-bottom: 12px; text-transform: uppercase; }
+
+    .tree-node { background: #0f172a; border: 1px solid #334155; border-radius: 10px; width: 230px; padding: 10px 12px; position: relative; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+    .tree-node:hover { border-color: #00c6ff; box-shadow: 0 0 15px rgba(0, 198, 255, 0.4); transform: translateY(-2px); }
+    .tree-node.finished { border-left: 4px solid #38ef7d; }
+    .tree-node.final-node { border: 2px solid #ffd700; background: rgba(255, 215, 0, 0.05); }
+
+    .node-header { display: flex; justify-content: space-between; font-size: 10px; color: #ff4b2b; font-weight: bold; margin-bottom: 6px; border-bottom: 1px dashed #1e293b; padding-bottom: 4px; }
+    .node-team { display: flex; justify-content: space-between; align-items: center; padding: 6px 8px; font-size: 12px; font-weight: bold; border-radius: 6px; margin-bottom: 4px; background: #1e293b; color: #cbd5e1; }
+    .node-team.winner { color: #38ef7d; background: rgba(56, 239, 125, 0.18); border: 1px solid rgba(56, 239, 125, 0.4); }
+    .node-team.placeholder { color: #64748b; font-style: italic; }
+    .node-score { font-family: 'Teko', sans-serif; font-size: 17px; background: #0f172a; padding: 1px 7px; border-radius: 4px; min-width: 24px; text-align: center; color: #fff; }
+
+    /* Garis Penghubung Horizontal */
+    .tree-node::after { content: ''; position: absolute; right: -23px; top: 50%; width: 23px; height: 2px; background: #334155; }
+    .tree-column:last-child .tree-node::after { display: none; }
+    .tree-node::before { content: ''; position: absolute; left: -23px; top: 50%; width: 23px; height: 2px; background: #334155; }
+    .tree-column:first-child .tree-node::before { display: none; }
+
+    .rank-1 { background: rgba(255, 215, 0, 0.15) !important; color: #ffd700; }
+    .rank-2 { background: rgba(192, 192, 192, 0.15) !important; color: #c0c0c0; }
+    .rank-3 { background: rgba(205, 127, 50, 0.15) !important; color: #cd7f32; }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .sync-badge { background: #11998e; color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; }
+    .role-badge { background: #00c6ff; color: #0f172a; padding: 4px 8px; border-radius: 4px; font-size: 10px; font-weight: 800; text-transform: uppercase; }
+
+    .camera-container { display: none; flex-direction: column; align-items: center; gap: 10px; margin-top: 10px; background: #0f172a; padding: 10px; border-radius: 8px; border: 1px dashed #334155; }
+    #videoElement { width: 100%; max-width: 320px; height: auto; border-radius: 8px; background: #000; border: 2px solid #00c6ff; }
+    #previewPhoto { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid #38ef7d; display: none; margin: 10px auto 0 auto; }
+
+    .trophy-container { text-align: center; padding: 20px 10px; background: linear-gradient(180deg, rgba(255,215,0,0.1) 0%, rgba(15,23,42,0) 100%); border-radius: 12px; border: 1px solid #ffd700; margin-top: 15px; animation: pulseGlow 2s infinite alternate; }
+    .trophy-icon { font-size: 65px; display: inline-block; animation: trophyBounce 1.5s ease infinite; filter: drop-shadow(0 0 15px rgba(255,215,0,0.8)); }
+    @keyframes trophyBounce { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-10px) scale(1.1); } }
+    @keyframes pulseGlow { 0% { box-shadow: 0 0 10px rgba(255, 215, 0, 0.2); } 100% { box-shadow: 0 0 25px rgba(255, 215, 0, 0.6); } }
+
+    .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10000; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
+    .modal-overlay img { max-width: 90%; max-height: 80%; border-radius: 12px; border: 3px solid #00c6ff; }
+    
+    .role-admin-only, .role-wasit-only, .role-write-only, .role-admin-wasit-only { display: none; }
+  </style>
+</head>
+<body>
+
+  <!-- MODAL ZOOM FOTO PESERTA -->
+  <div id="imageZoomModal" class="modal-overlay" onclick="closeZoomModal()">
+    <img id="zoomedImage" src="" alt="Zoom Foto Pemain">
+  </div>
+
+  <!-- MODAL LISENSI -->
+  <div id="licenseModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15,23,42,0.95); z-index: 9999; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(8px);">
+    <div style="background: #1e293b; border: 1px solid #334155; width: 90%; max-width: 400px; padding: 25px; border-radius: 14px; text-align: center;">
+      <h2 style="color: #00c6ff; font-family: 'Teko', sans-serif; font-size: 28px; margin-bottom: 8px;">Aktivasi Aplikasi</h2>
+      <p style="color: #94a3b8; font-size: 12px; margin-bottom: 20px;">Masukkan kode lisensi resmi Anda.</p>
+      <input type="text" id="licenseInput" class="form-control" placeholder="ADMIN123 / WASIT01 / USER01" style="text-align: center; text-transform: uppercase; font-weight: bold; margin-bottom: 15px;">
+      <button type="button" class="btn btn-green btn-full" onclick="verifikasiLisensi()">AKTIFKAN LISENSI</button>
+      <p id="licenseError" style="color: #ff416c; font-size: 12px; margin-top: 12px; font-weight: bold; display: none;"></p>
+    </div>
+  </div>
+
+  <div class="container">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+      <div style="display:flex; gap:6px; align-items:center;">
+        <span class="sync-badge" id="statusSync">🔄 Sync Active</span>
+        <span class="role-badge" id="displayRole">ROLE: -</span>
+      </div>
+      <div style="display:flex; gap:6px; align-items:center;">
+        <span style="font-size: 11px; color: #94a3b8;">Event ID: <strong id="displayEventId" style="color: #00c6ff;">-</strong></span>
+        <button type="button" class="btn btn-red btn-sm" onclick="logoutLisensi()" style="padding:2px 6px; font-size:9px;">Ganti Key</button>
+      </div>
+    </div>
+
+    <!-- Tab Navigasi -->
+    <div class="nav-tabs">
+      <button class="tab-btn role-tab-pendaftaran" id="btnTabPendaftaran" onclick="openTab('pendaftaran', event)">📋 Pendaftaran</button>
+      <button class="tab-btn" id="btnTabDaftarPemain" onclick="openTab('daftarPemain', event)">👥 Pemain</button>
+      <button class="tab-btn" id="btnTabJadwal" onclick="openTab('jadwal', event)">🏸 Pertandingan</button>
+      <button class="tab-btn" id="btnTabBagan" onclick="openTab('baganHorizontal', event)">🌳 Bagan Horizontal</button>
+      <button class="tab-btn" id="btnTabSkor" onclick="openTab('skor', event)">🏆 Klasemen</button>
+    </div>
+
+    <!-- Tab Pendaftaran -->
+    <div id="pendaftaran" class="tab-content">
+      <form class="card role-admin-only" onsubmit="simpanInfo(event)">
+        <h2>Pengaturan Event & Pemulihan</h2>
+        <div class="form-group">
+          <input type="text" id="eventIdInput" class="form-control" placeholder="Kode Ruang Event" required>
+        </div>
+        <div class="form-group">
+          <input type="text" id="namaEvent" class="form-control" placeholder="Nama Turnamen" required>
+        </div>
+        <div class="form-group">
+          <input type="text" id="lokasiEvent" class="form-control" placeholder="Lokasi Event">
+        </div>
+        <div class="form-group" style="display: flex; gap: 8px;">
+          <div style="flex: 1;">
+            <label style="font-size: 10px; color: #94a3b8; display: block; margin-bottom: 4px;">TGL MULAI</label>
+            <input type="date" id="tglMulai" class="form-control">
+          </div>
+          <div style="flex: 1;">
+            <label style="font-size: 10px; color: #94a3b8; display: block; margin-bottom: 4px;">TGL SELESAI</label>
+            <input type="date" id="tglSelesai" class="form-control">
+          </div>
+        </div>
+        <button type="submit" class="btn btn-red btn-full" style="margin-bottom: 15px;">Buat Event</button>
+
+        <!-- TOMBOL BACKUP, RESTORE & RESET DATA -->
+        <div style="border-top: 1px dashed #334155; padding-top: 15px; display: flex; gap: 8px;">
+          <button type="button" class="btn btn-blue btn-sm" style="flex:1;" onclick="backupDataJSON()">💾 Backup</button>
+          <label class="btn btn-yellow btn-sm" style="flex:1; text-align:center; cursor:pointer;">
+            📂 Restore
+            <input type="file" id="restoreFile" accept=".json" style="display:none;" onchange="restoreDataJSON(event)">
+          </label>
+          <button type="button" class="btn btn-gray btn-sm" style="flex:1;" onclick="resetEventData()">🔄 Reset</button>
+        </div>
+      </form>
+
+      <form class="card role-admin-only" onsubmit="daftarPeserta(event)">
+        <h2>Pendaftaran Pemain</h2>
+        <div class="form-group">
+          <input type="text" id="namaPeserta" class="form-control" placeholder="Nama Pemain / Pasangan" required>
+        </div>
+        <div class="form-group">
+          <input type="text" id="alamatPeserta" class="form-control" placeholder="Klub / Asal PB" required>
+        </div>
+        <div class="form-group">
+          <input type="tel" id="telpPeserta" class="form-control" placeholder="Nomer Telepon / WhatsApp" required>
+        </div>
+
+        <div class="form-group">
+          <label style="font-size: 11px; color: #94a3b8; display: block; margin-bottom: 6px;">Foto Pemain:</label>
+          <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+            <button type="button" class="btn btn-blue btn-sm" style="flex:1;" onclick="bukaKamera()">📷 Kamera</button>
+            <label class="btn btn-red btn-sm" style="flex:1; text-align:center; cursor:pointer;">
+              📁 Upload File
+              <input type="file" id="fotoPeserta" accept="image/*" style="display:none;" onchange="handleFileUpload(event)">
+            </label>
+          </div>
+
+          <div id="cameraArea" class="camera-container">
+            <video id="videoElement" autoplay playsinline></video>
+            <div style="display:flex; gap:6px;">
+              <button type="button" class="btn btn-green btn-sm" onclick="tangkapFoto()">📸 Jepret</button>
+              <button type="button" class="btn btn-red btn-sm" onclick="tutupKamera()">❌ Batal</button>
+            </div>
+          </div>
+
+          <img id="previewPhoto" alt="Preview Foto">
+          <canvas id="canvasElement" style="display:none;"></canvas>
+        </div>
+
+        <button type="submit" class="btn btn-green btn-full">Tambah Pemain</button>
+      </form>
+    </div>
+
+    <!-- Tab Daftar Pemain -->
+    <div id="daftarPemain" class="tab-content">
+      <!-- Highlight Banner Event -->
+      <div class="card" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border-left: 4px solid #ff4b2b; padding: 15px 20px; margin-bottom: 15px;">
+        <h3 id="highlightNamaEvent" style="font-size: 20px; color: #fff; margin: 0 0 5px 0; border: none; padding: 0;">-</h3>
+        <p id="highlightInfoDetail" style="font-size: 12px; color: #94a3b8; margin: 0;"></p>
+      </div>
+
+      <div class="card">
+        <h2>Daftar Pemain</h2>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th class="text-left">Pemain</th>
+                <th class="text-left">Klub/PB</th>
+                <th class="text-left">No. Telp/WA</th>
+              </tr>
+            </thead>
+            <tbody id="tabelPesertaBody">
+              <tr><td colspan="3" style="color:#94a3b8;">Belum ada data.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab Pertandingan -->
+    <div id="jadwal" class="tab-content">
+      <!-- Highlight Banner Event -->
+      <div class="card" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border-left: 4px solid #ff4b2b; padding: 15px 20px; margin-bottom: 15px;">
+        <h3 id="highlightNamaEventJadwal" style="font-size: 20px; color: #fff; margin: 0 0 5px 0; border: none; padding: 0;">-</h3>
+        <p id="highlightInfoDetailJadwal" style="font-size: 12px; color: #94a3b8; margin: 0;"></p>
+      </div>
+
+      <div class="card">
+        <h2>Daftar Match & Update Skor</h2>
+        
+        <!-- PENGATURAN SISTEM KOMPETISI -->
+        <div class="form-group" style="background: #0f172a; padding: 12px; border-radius: 8px; border: 1px solid #334155; margin-bottom: 15px;">
+          <label style="font-size: 11px; color: #00c6ff; display: block; margin-bottom: 6px; font-weight: bold;">SISTEM KOMPETISI</label>
+          <select id="sistemKompetisiSelect" class="form-control" style="margin-bottom: 10px;">
+            <option value="knockout">Sistem Gugur (Knockout / Single Elimination)</option>
+            <option value="roundrobin">Setengah Kompetisi (Round Robin)</option>
+          </select>
+          <div style="display: flex; gap: 8px;">
+            <button type="button" class="btn btn-green btn-sm role-admin-wasit-only" style="flex:1;" onclick="generateKnockoutBracket()">
+              🎲 Acak & Generate Bagan
+            </button>
+            <button type="button" class="btn btn-blue btn-sm role-wasit-only" style="flex:1;" onclick="simpanJadwalPertandingan()">
+              💾 Simpan Jadwal
+            </button>
+          </div>
+        </div>
+
+        <div id="kontainerJadwal">
+          <p style="color:#94a3b8; text-align:center;">Jadwal belum disusun.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab Bagan Horizontal -->
+    <div id="baganHorizontal" class="tab-content">
+      <!-- Highlight Banner Event -->
+      <div class="card" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border-left: 4px solid #ff4b2b; padding: 15px 20px; margin-bottom: 15px;">
+        <h3 id="highlightNamaEventBagan" style="font-size: 20px; color: #fff; margin: 0 0 5px 0; border: none; padding: 0;">-</h3>
+        <p id="highlightInfoDetailBagan" style="font-size: 12px; color: #94a3b8; margin: 0;"></p>
+      </div>
+
+      <div class="card">
+        <h2>Bagan Pertandingan (Kiri ke Kanan → Final)</h2>
+        <p style="color:#94a3b8; font-size:12px; margin-bottom:15px;">Geser layar ke kanan untuk melihat alur babak selanjutnya hingga Final.</p>
+        
+        <div class="horizontal-bracket-wrapper">
+          <div id="treeContainer" class="tree-container">
+            <p style="color:#94a3b8;">Bagan akan dibuat otomatis setelah bracket diacak.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab Klasemen -->
+    <div id="skor" class="tab-content">
+      <!-- Highlight Banner Event -->
+      <div class="card" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border-left: 4px solid #ff4b2b; padding: 15px 20px; margin-bottom: 15px;">
+        <h3 id="highlightNamaEventKlasemen" style="font-size: 20px; color: #fff; margin: 0 0 5px 0; border: none; padding: 0;">-</h3>
+        <p id="highlightInfoDetailKlasemen" style="font-size: 12px; color: #94a3b8; margin: 0;"></p>
+      </div>
+
+      <div class="card">
+        <h2>Papan Klasemen & Juara</h2>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Pos</th>
+                <th class="text-left">Pemain</th>
+                <th>Main</th>
+                <th>Menang</th>
+                <th>Kalah</th>
+                <th>PTS</th>
+              </tr>
+            </thead>
+            <tbody id="tabelKlasemenBody">
+              <tr><td colspan="6" style="color:#94a3b8;">Belum ada data.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div id="championSection"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCMvemJT1b6fy5D_s8Hl9WOwXZmsZ096jE",
+      authDomain: "drawing-match-ac69a.firebaseapp.com",
+      databaseURL: "https://turnamen-badminton-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "drawing-match-ac69a",
+      storageBucket: "drawing-match-ac69a.firebasestorage.app",
+      messagingSenderId: "22800670068",
+      appId: "1:22800670068:web:6bc373b99331c8e0bca021"
+    };
+
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    let currentEventId = localStorage.getItem('active_event_id') || 'DEFAULT-EVENT';
+    let currentUserRole = 'viewer'; 
+    let eventData = { info: {}, peserta: [], matches: [] };
+    let capturedImageData = "";
+    let mediaStream = null;
+    const defaultAvatar = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2394a3b8'%3E%3Cpath d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z'/%3E%3C/svg%3E";
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const activeSession = localStorage.getItem('active_license_key');
+      if (activeSession) {
+        document.getElementById('licenseModal').style.display = 'none';
+        verifikasiLisensiAuto(activeSession);
+      } else {
+        document.getElementById('licenseModal').style.display = 'flex';
+      }
+    });
+
+    function openZoomModal(src) {
+      if(!src) return;
+      document.getElementById('zoomedImage').src = src;
+      document.getElementById('imageZoomModal').style.display = 'flex';
+    }
+
+    function closeZoomModal() {
+      document.getElementById('imageZoomModal').style.display = 'none';
+    }
+
+    function verifikasiLisensi() {
+      const inputKey = document.getElementById('licenseInput').value.trim().toUpperCase();
+      if (!inputKey) return;
+      verifikasiLisensiAuto(inputKey);
+    }
+
+    function verifikasiLisensiAuto(inputKey) {
+      if (inputKey === "ADMIN123") { setRolePermissions(inputKey, 'admin'); return; }
+      if (inputKey === "WASIT01") { setRolePermissions(inputKey, 'wasit'); return; }
+      if (inputKey === "USER01") { setRolePermissions(inputKey, 'viewer'); return; }
+
+      db.ref('licenses/' + inputKey).once('value').then((snapshot) => {
+        if (snapshot.exists()) {
+          setRolePermissions(inputKey, snapshot.val().role || 'viewer');
+        } else {
+          document.getElementById('licenseError').textContent = "❌ Kode lisensi tidak valid!";
+          document.getElementById('licenseError').style.display = "block";
+        }
+      });
+    }
+
+    function setRolePermissions(key, role) {
+      currentUserRole = role;
+      localStorage.setItem('active_license_key', key);
+      document.getElementById('licenseModal').style.display = 'none';
+      document.getElementById('displayRole').textContent = 'ROLE: ' + role.toUpperCase();
+      applyUIByRole(role);
+      initRealtimeSync();
+    }
+
+    function logoutLisensi() {
+      localStorage.removeItem('active_license_key');
+      location.reload();
+    }
+
+    function applyUIByRole(role) {
+      document.querySelectorAll('.role-admin-only, .role-wasit-only, .role-write-only, .role-admin-wasit-only').forEach(el => el.style.display = 'none');
+      const btnPendaftaran = document.getElementById('btnTabPendaftaran');
+      const sistemSelect = document.getElementById('sistemKompetisiSelect');
+
+      if (role === 'admin') {
+        if (btnPendaftaran) btnPendaftaran.style.display = 'inline-block';
+        document.querySelectorAll('.role-admin-only, .role-wasit-only, .role-write-only, .role-admin-wasit-only').forEach(el => el.style.display = 'block');
+        if (sistemSelect) sistemSelect.disabled = false;
+        openTabDirect('pendaftaran');
+      } else if (role === 'wasit') {
+        if (btnPendaftaran) btnPendaftaran.style.display = 'none';
+        document.querySelectorAll('.role-wasit-only, .role-write-only, .role-admin-wasit-only').forEach(el => el.style.display = 'block');
+        if (sistemSelect) sistemSelect.disabled = false;
+        openTabDirect('jadwal');
+      } else {
+        // Viewer / User01: Menu sistem kompetisi tampil (view only), tombol simpan jadwal hide
+        if (btnPendaftaran) btnPendaftaran.style.display = 'none';
+        if (sistemSelect) sistemSelect.disabled = true;
+        openTabDirect('baganHorizontal');
+      }
+    }
+
+    function initRealtimeSync() {
+      document.getElementById('eventIdInput').value = currentEventId;
+      document.getElementById('displayEventId').textContent = currentEventId;
+
+      db.ref('events/' + currentEventId).on('value', (snapshot) => {
+        if (snapshot.exists()) {
+          eventData = snapshot.val();
+          if (!eventData.peserta) eventData.peserta = [];
+          if (!eventData.matches) eventData.matches = [];
+        } else {
+          eventData = { info: {}, peserta: [], matches: [] };
+        }
+        renderUI();
+      });
+    }
+
+    /* LOGIKA BACKUP, RESTORE & RESET DATA */
+    function backupDataJSON() {
+      if (currentUserRole !== 'admin') return;
+      if (!eventData || (!eventData.peserta.length && !eventData.matches.length)) {
+        alert("Tidak ada data event untuk di-backup!");
+        return;
+      }
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(eventData, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `Backup_${currentEventId}_${Date.now()}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    }
+
+    function restoreDataJSON(event) {
+      if (currentUserRole !== 'admin') return;
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const restoredObj = JSON.parse(e.target.result);
+          if (confirm("Apakah Anda yakin ingin memulihkan/menimpa data event dari file JSON ini?")) {
+            db.ref('events/' + currentEventId).set(restoredObj).then(() => {
+              alert("Data berhasil dipulihkan ke database!");
+            });
+          }
+        } catch (err) {
+          alert("File JSON tidak valid!");
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function resetEventData() {
+      if (currentUserRole !== 'admin') return;
+      if (confirm("Apakah Anda yakin ingin mereset/menghapus seluruh data event ini?")) {
+        db.ref('events/' + currentEventId).set({ info: {}, peserta: [], matches: [] }).then(() => {
+          alert("Event berhasil di-reset!");
+        });
+      }
+    }
+
+    async function bukaKamera() {
+      if (currentUserRole !== 'admin') return;
+      try {
+        mediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
+        document.getElementById('videoElement').srcObject = mediaStream;
+        document.getElementById('cameraArea').style.display = 'flex';
+      } catch (err) { alert('Gagal mengakses kamera!'); }
+    }
+
+    function tutupKamera() {
+      if (mediaStream) mediaStream.getTracks().forEach(track => track.stop());
+      document.getElementById('cameraArea').style.display = 'none';
+    }
+
+    function tangkapFoto() {
+      const video = document.getElementById('videoElement');
+      const canvas = document.getElementById('canvasElement');
+      canvas.width = 300; canvas.height = 300;
+      canvas.getContext('2d').drawImage(video, 0, 0, 300, 300);
+      capturedImageData = canvas.toDataURL('image/jpeg', 0.8);
+      document.getElementById('previewPhoto').src = capturedImageData;
+      document.getElementById('previewPhoto').style.display = 'block';
+      tutupKamera();
+    }
+
+    function handleFileUpload(event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = e => {
+          capturedImageData = e.target.result;
+          document.getElementById('previewPhoto').src = capturedImageData;
+          document.getElementById('previewPhoto').style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function simpanInfo(e) {
+      e.preventDefault();
+      if (currentUserRole !== 'admin') return;
+      const newEvtId = document.getElementById('eventIdInput').value.trim().toUpperCase();
+      const namaEvt = document.getElementById('namaEvent').value.trim();
+      const lokasiEvt = document.getElementById('lokasiEvent').value.trim();
+      const tglMulaiEvt = document.getElementById('tglMulai').value;
+      const tglSelesaiEvt = document.getElementById('tglSelesai').value;
+      
+      if (!newEvtId) return;
+      currentEventId = newEvtId;
+      localStorage.setItem('active_event_id', currentEventId);
+      
+      db.ref('events/' + currentEventId + '/info').set({ 
+        nama: namaEvt, 
+        lokasi: lokasiEvt, 
+        tglMulai: tglMulaiEvt, 
+        tglSelesai: tglSelesaiEvt 
+      });
+      initRealtimeSync();
+      alert('Event berhasil dibuat dan dihubungkan!');
+    }
+
+    function daftarPeserta(e) {
+      e.preventDefault();
+      if (currentUserRole !== 'admin') return;
+      const nama = document.getElementById('namaPeserta').value.trim();
+      const alamat = document.getElementById('alamatPeserta').value.trim();
+      const telp = document.getElementById('telpPeserta').value.trim();
+      const fotoFinal = capturedImageData || defaultAvatar;
+
+      if (!nama) return;
+      let pList = eventData.peserta || [];
+      pList.push({ id: Date.now(), nama: nama, alamat: alamat, telp: telp, foto: fotoFinal });
+
+      db.ref('events/' + currentEventId + '/peserta').set(pList);
+      document.getElementById('namaPeserta').value = '';
+      document.getElementById('alamatPeserta').value = '';
+      document.getElementById('telpPeserta').value = '';
+      document.getElementById('previewPhoto').style.display = 'none';
+      capturedImageData = "";
+    }
+
+    function generateKnockoutBracket() {
+      if (currentUserRole !== 'admin' && currentUserRole !== 'wasit') return;
+      const players = eventData.peserta || [];
+      if (players.length < 2) { alert('Minimal 2 pemain!'); return; }
+
+      const sistem = document.getElementById('sistemKompetisiSelect').value;
+      let shuffled = [...players].sort(() => Math.random() - 0.5);
+      let matches = [];
+      let matchCounter = 1;
+
+      if (sistem === 'roundrobin') {
+        for (let i = 0; i < shuffled.length; i++) {
+          for (let j = i + 1; j < shuffled.length; j++) {
+            let pA = shuffled[i];
+            let pB = shuffled[j];
+            matches.push({
+              id: matchCounter++,
+              round: 1,
+              roundName: "BABAK PENYISIHAN GRUP",
+              teamA: pA.nama,
+              fotoA: pA.foto,
+              teamB: pB.nama,
+              fotoB: pB.foto,
+              scoreA: '', scoreB: '', winner: '', nextMatchId: 0
+            });
+          }
+        }
+      } else {
+        let targetPower = 2;
+        while (targetPower < shuffled.length) targetPower *= 2;
+
+        let roundIndex = 1;
+        let numMatchesInRound = targetPower / 2;
+
+        let getRoundName = (n) => {
+          if (n === 1) return "FINAL";
+          if (n === 2) return "SEMI FINAL";
+          if (n === 4) return "PEREMPAT FINAL";
+          return `BABAK ${n * 2} BESAR`;
+        };
+
+        let round1Matches = [];
+        for (let i = 0; i < numMatchesInRound; i++) {
+          let pA = shuffled[i * 2] || null;
+          let pB = shuffled[i * 2 + 1] || null;
+          
+          let m = {
+            id: matchCounter++,
+            round: 1,
+            roundName: getRoundName(numMatchesInRound),
+            teamA: pA ? pA.nama : "BYE",
+            fotoA: pA ? pA.foto : defaultAvatar,
+            teamB: pB ? pB.nama : "BYE",
+            fotoB: pB ? pB.foto : defaultAvatar,
+            scoreA: '', scoreB: '', winner: '', nextMatchId: 0
+          };
+
+          if (pA && !pB) { m.winner = pA.nama; m.scoreA = 21; m.scoreB = 0; m.isBye = true; }
+          round1Matches.push(m);
+        }
+        matches.push(...round1Matches);
+
+        let currentRoundMatches = round1Matches;
+        while (currentRoundMatches.length > 1) {
+          roundIndex++;
+          let nextRoundCount = currentRoundMatches.length / 2;
+          let nextRoundMatches = [];
+
+          for (let i = 0; i < nextRoundCount; i++) {
+            let parent1 = currentRoundMatches[i * 2];
+            let parent2 = currentRoundMatches[i * 2 + 1];
+
+            let m = {
+              id: matchCounter++,
+              round: roundIndex,
+              roundName: getRoundName(nextRoundCount),
+              teamA: parent1.winner || `Pemenang M${parent1.id}`,
+              fotoA: defaultAvatar,
+              teamB: parent2.winner || `Pemenang M${parent2.id}`,
+              fotoB: defaultAvatar,
+              scoreA: '', scoreB: '', winner: '', nextMatchId: 0
+            };
+
+            parent1.nextMatchId = m.id;
+            parent2.nextMatchId = m.id;
+
+            if (parent1.winner && parent1.winner !== "BYE") {
+              m.teamA = parent1.winner;
+              const pFoundA = players.find(p => p.nama === parent1.winner);
+              if(pFoundA) m.fotoA = pFoundA.foto;
+            }
+            if (parent2.winner && parent2.winner !== "BYE") {
+              m.teamB = parent2.winner;
+              const pFoundB = players.find(p => p.nama === parent2.winner);
+              if(pFoundB) m.fotoB = pFoundB.foto;
+            }
+
+            nextRoundMatches.push(m);
+          }
+          matches.push(...nextRoundMatches);
+          currentRoundMatches = nextRoundMatches;
+        }
+      }
+
+      eventData.matches = matches;
+      renderUI();
+      alert('Bagan berhasil digenerate! Klik "Simpan Jadwal" untuk menyimpan ke database.');
+    }
+
+    function simpanJadwalPertandingan() {
+      if (currentUserRole !== 'admin' && currentUserRole !== 'wasit') return;
+      if (!eventData.matches || eventData.matches.length === 0) {
+        alert('Belum ada jadwal yang digenerate!');
+        return;
+      }
+      db.ref('events/' + currentEventId + '/matches').set(eventData.matches).then(() => {
+        alert('Jadwal pertandingan berhasil disimpan secara permanen ke server!');
+      });
+    }
+
+    function simpanSkor(id) {
+      if (currentUserRole !== 'admin' && currentUserRole !== 'wasit') return;
+      const sA = document.getElementById(`scoreA_${id}`).value;
+      const sB = document.getElementById(`scoreB_${id}`).value;
+      if (sA === '' || sB === '' || sA === sB) { alert('Isi skor valid & tidak seri!'); return; }
+
+      let matches = [...eventData.matches];
+      let currentMatch = matches.find(m => m.id === id);
+      if (!currentMatch) return;
+
+      const valA = parseInt(sA);
+      const valB = parseInt(sB);
+      currentMatch.scoreA = valA;
+      currentMatch.scoreB = valB;
+      const winnerName = valA > valB ? currentMatch.teamA : currentMatch.teamB;
+      const winnerFoto = valA > valB ? currentMatch.fotoA : currentMatch.fotoB;
+      currentMatch.winner = winnerName;
+
+      if (currentMatch.nextMatchId) {
+        let nextMatch = matches.find(m => m.id === currentMatch.nextMatchId);
+        if (nextMatch) {
+          const siblings = matches.filter(m => m.nextMatchId === currentMatch.nextMatchId);
+          if (siblings[0] && siblings[0].id === currentMatch.id) {
+            nextMatch.teamA = winnerName; nextMatch.fotoA = winnerFoto;
+          } else {
+            nextMatch.teamB = winnerName; nextMatch.fotoB = winnerFoto;
+          }
+        }
+      }
+
+      db.ref('events/' + currentEventId + '/matches').set(matches);
+    }
+
+    function renderUI() {
+      if (eventData.info) {
+        if (eventData.info.nama && document.getElementById('namaEvent').value === '') {
+          document.getElementById('namaEvent').value = eventData.info.nama;
+        }
+        if (eventData.info.lokasi && document.getElementById('lokasiEvent').value === '') {
+          document.getElementById('lokasiEvent').value = eventData.info.lokasi;
+        }
+        if (eventData.info.tglMulai && document.getElementById('tglMulai').value === '') {
+          document.getElementById('tglMulai').value = eventData.info.tglMulai;
+        }
+        if (eventData.info.tglSelesai && document.getElementById('tglSelesai').value === '') {
+          document.getElementById('tglSelesai').value = eventData.info.tglSelesai;
+        }
+
+        const info = eventData.info;
+        const namaText = info.nama || 'Turnamen Tanpa Nama';
+        const lokasiText = info.lokasi ? `📍 ${info.lokasi}` : '📍 Lokasi belum diatur';
+        let tglText = '';
+        if (info.tglMulai || info.tglSelesai) {
+          tglText = ` | 📅 ${info.tglMulai || '-'} s/d ${info.tglSelesai || '-'}`;
+        }
+
+        ['highlightNamaEvent', 'highlightNamaEventJadwal', 'highlightNamaEventBagan', 'highlightNamaEventKlasemen'].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.textContent = namaText;
+        });
+
+        ['highlightInfoDetail', 'highlightInfoDetailJadwal', 'highlightInfoDetailBagan', 'highlightInfoDetailKlasemen'].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.textContent = `${lokasiText}${tglText}`;
+        });
+      }
+
+      const tbodyP = document.getElementById('tabelPesertaBody');
+      tbodyP.innerHTML = '';
+      (eventData.peserta || []).forEach(p => {
+        tbodyP.innerHTML += `<tr>
+          <td class="text-left"><img src="${p.foto || defaultAvatar}" class="player-avatar" onclick="openZoomModal('${p.foto || defaultAvatar}')"><strong>${p.nama}</strong></td>
+          <td class="text-left">${p.alamat}</td>
+          <td class="text-left">${p.telp || '-'}</td>
+        </tr>`;
+      });
+
+      const containerJ = document.getElementById('kontainerJadwal');
+      containerJ.innerHTML = '';
+      const listMatches = eventData.matches || [];
+      const canEdit = (currentUserRole === 'admin' || currentUserRole === 'wasit');
+
+      listMatches.forEach(m => {
+        containerJ.innerHTML += `
+          <div class="match-card">
+            <div class="match-header"><span>Match ${m.id} - ${m.roundName}</span></div>
+            <div class="match-body">
+              <span class="match-team"><img src="${m.fotoA || defaultAvatar}" class="player-avatar" onclick="openZoomModal('${m.fotoA}')">${m.teamA}</span>
+              <div style="display:flex; gap:4px; align-items:center;">
+                <input type="number" id="scoreA_${m.id}" class="score-input" value="${m.scoreA !== undefined ? m.scoreA : ''}" ${!canEdit ? 'readonly' : ''}>
+                <strong>:</strong>
+                <input type="number" id="scoreB_${m.id}" class="score-input" value="${m.scoreB !== undefined ? m.scoreB : ''}" ${!canEdit ? 'readonly' : ''}>
+              </div>
+              <span class="match-team">${m.teamB}<img src="${m.fotoB || defaultAvatar}" class="player-avatar" onclick="openZoomModal('${m.fotoB}')"></span>
+            </div>
+            ${canEdit ? `<button class="btn btn-green btn-sm" onclick="simpanSkor(${m.id})">💾 Simpan Skor</button>` : ''}
+          </div>
+        `;
+      });
+
+      const treeContainer = document.getElementById('treeContainer');
+      treeContainer.innerHTML = '';
+
+      if (listMatches.length === 0) {
+        treeContainer.innerHTML = '<p style="color:#94a3b8;">Bagan akan dibuat otomatis setelah bracket diacak.</p>';
+      } else {
+        let rounds = {};
+        listMatches.forEach(m => {
+          if (!rounds[m.round]) rounds[m.round] = [];
+          rounds[m.round].push(m);
+        });
+
+        Object.keys(rounds).sort((a,b) => a - b).forEach(rKey => {
+          const roundMatches = rounds[rKey];
+          const rName = roundMatches[0].roundName;
+          
+          let colHtml = `<div class="tree-column"><div class="tree-column-header">${rName}</div>`;
+          
+          roundMatches.forEach(m => {
+            const winA = (m.winner && m.winner === m.teamA) ? 'winner' : '';
+            const winB = (m.winner && m.winner === m.teamB) ? 'winner' : '';
+            const isDone = m.winner ? 'finished' : '';
+            const isFinal = rName === 'FINAL' ? 'final-node' : '';
+
+            colHtml += `
+              <div class="tree-node ${isDone} ${isFinal}">
+                <div class="node-header"><span>MATCH ${m.id}</span></div>
+                <div class="node-team ${winA} ${m.teamA.includes('Pemenang') ? 'placeholder' : ''}">
+                  <span style="display:flex; align-items:center;"><img src="${m.fotoA || defaultAvatar}" class="player-avatar" style="width:20px; height:20px; border-width:1px;" onclick="openZoomModal('${m.fotoA}')">${m.teamA}</span>
+                  <span class="node-score">${m.scoreA !== '' ? m.scoreA : '-'}</span>
+                </div>
+                <div class="node-team ${winB} ${m.teamB.includes('Pemenang') ? 'placeholder' : ''}">
+                  <span style="display:flex; align-items:center;"><img src="${m.fotoB || defaultAvatar}" class="player-avatar" style="width:20px; height:20px; border-width:1px;" onclick="openZoomModal('${m.fotoB}')">${m.teamB}</span>
+                  <span class="node-score">${m.scoreB !== '' ? m.scoreB : '-'}</span>
+                </div>
+              </div>
+            `;
+          });
+
+          colHtml += `</div>`;
+          treeContainer.innerHTML += colHtml;
+        });
+      }
+
+      let statsMap = {};
+      (eventData.peserta || []).forEach(p => statsMap[p.nama] = { nama: p.nama, foto: p.foto || defaultAvatar, played:0, won:0, lost:0, pts:0 });
+      
+      listMatches.forEach(m => {
+        if (m.winner && m.winner !== "BYE") {
+          if (statsMap[m.teamA]) { statsMap[m.teamA].played++; if(m.winner === m.teamA) { statsMap[m.teamA].won++; statsMap[m.teamA].pts += 3; } else statsMap[m.teamA].lost++; }
+          if (statsMap[m.teamB] && !m.isBye) { statsMap[m.teamB].played++; if(m.winner === m.teamB) { statsMap[m.teamB].won++; statsMap[m.teamB].pts += 3; } else statsMap[m.teamB].lost++; }
+        }
+      });
+
+      let sortedStats = Object.values(statsMap).sort((a, b) => b.pts - a.pts || b.won - a.won);
+
+      const tbodyK = document.getElementById('tabelKlasemenBody');
+      tbodyK.innerHTML = '';
+
+      sortedStats.forEach((p, idx) => {
+        let posDisplay = idx + 1;
+        let rankClass = "";
+        if (idx === 0 && p.pts > 0) { posDisplay = "🥇 1"; rankClass = "rank-1"; }
+        else if (idx === 1 && p.pts > 0) { posDisplay = "🥈 2"; rankClass = "rank-2"; }
+        else if (idx === 2 && p.pts > 0) { posDisplay = "🥉 3"; rankClass = "rank-3"; }
+
+        tbodyK.innerHTML += `
+          <tr class="${rankClass}">
+            <td><strong>${posDisplay}</strong></td>
+            <td class="text-left"><img src="${p.foto}" class="player-avatar" onclick="openZoomModal('${p.foto}')"><strong>${p.nama}</strong></td>
+            <td>${p.played}</td>
+            <td>${p.won}</td>
+            <td>${p.lost}</td>
+            <td><strong style="color:#38ef7d;">${p.pts}</strong></td>
+          </tr>
+        `;
+      });
+
+      const champSec = document.getElementById('championSection');
+      const finalMatch = listMatches.find(m => m.roundName === "FINAL");
+      if (finalMatch && finalMatch.winner && finalMatch.winner !== "BYE") {
+        const champFoto = finalMatch.winner === finalMatch.teamA ? finalMatch.fotoA : finalMatch.fotoB;
+        champSec.innerHTML = `
+          <div class="trophy-container">
+            <div class="trophy-icon">🏆</div>
+            <h3 style="color:#ffd700; font-family:'Teko'; font-size:32px;">JUARA TURNAMEN</h3>
+            <div style="display:flex; align-items:center; justify-content:center; gap:10px; margin-top:6px;">
+              <img src="${champFoto || defaultAvatar}" style="width:50px; height:50px; border-radius:50%; border:2px solid #ffd700;" onclick="openZoomModal('${champFoto || defaultAvatar}')">
+              <span style="font-size:22px; font-weight:bold; color:#fff;">${finalMatch.winner}</span>
+            </div>
+          </div>
+        `;
+      } else { champSec.innerHTML = ''; }
+    }
+
+    function openTabDirect(tabId) {
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      const targetTab = document.getElementById(tabId);
+      const targetBtn = document.querySelector(`button[onclick*="'${tabId}'"]`);
+      if (targetTab) targetTab.classList.add('active');
+      if (targetBtn) targetBtn.classList.add('active');
+    }
+
+    function openTab(tabId, evt) {
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+      evt.currentTarget.classList.add('active');
+    }
+  </script>
+</body>
+</html>
+
