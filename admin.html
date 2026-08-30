@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin - Manajemen Lisensi & Password</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800&family=Teko:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Montserrat', sans-serif; }
+    body { background-color: #0f172a; padding: 20px; color: #f8fafc; }
+    .container { max-width: 1200px; margin: 0 auto; }
+    
+    .header {
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      border: 1px solid #334155;
+      border-radius: 14px;
+      padding: 20px;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+    }
+
+    .header h1 {
+      font-family: 'Teko', sans-serif;
+      font-size: 32px;
+      color: #ff4b2b;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    .header .admin-badge {
+      background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);
+      padding: 8px 15px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .stat-card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 10px;
+      padding: 15px;
+      text-align: center;
+    }
+
+    .stat-card .stat-number {
+      font-family: 'Teko', sans-serif;
+      font-size: 40px;
+      color: #00c6ff;
+    }
+
+    .stat-card .stat-label {
+      font-size: 12px;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .card {
+      background: #1e293b;
+      padding: 20px;
+      border-radius: 14px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+      margin-bottom: 20px;
+      border: 1px solid #334155;
+    }
+
+    .card h2 {
+      font-family: 'Teko', sans-serif;
+      font-size: 24px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 15px;
+      color: #f1f5f9;
+      border-left: 4px solid #ff4b2b;
+      padding-left: 10px;
+    }
+
+    .card h3 {
+      font-family: 'Teko', sans-serif;
+      font-size: 18px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 15px;
+      color: #00c6ff;
+    }
+
+    .form-group { margin-bottom: 15px; }
+    .form-control {
+      width: 100%;
+      padding: 12px 15px;
+      background-color: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      font-size: 14px;
+      color: #fff;
+      outline: none;
+      transition: all 0.3s;
+    }
+
+    .form-control:focus {
+      border-color: #00c6ff;
+      box-shadow: 0 0 0 3px rgba(0, 198, 255, 0.1);
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+    }
+
+    .btn {
+      padding: 12px 20px;
+      border: none;
+      border-radius: 8px;
+      font-weight: 800;
+      font-size: 14px;
+      text-transform: uppercase;
+      font-style: italic;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.25s;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    }
+
+    .btn-red { background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%); color: white; }
+    .btn-green { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); color: #0f172a; }
+    .btn-blue { background: linear-gradient(135deg, #00c6ff 0%, #0072ff 100%); color: white; }
+    .btn-yellow { background: linear-gradient(135deg, #f7b731 0%, #ffa801 100%); color: #0f172a; }
+    .btn-red-outline { background: transparent; border: 2px solid #ff416c; color: #ff416c; }
+    .btn-full { width: 100%; }
+    .btn-sm { padding: 8px 12px; font-size: 12px; }
+
+    .table-container { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
+    th, td { padding: 12px 15px; text-align: center; border-bottom: 1px solid #334155; }
+    th {
+      background-color: #0f172a;
+      color: #ff4b2b;
+      font-family: 'Teko', sans-serif;
+      font-size: 18px;
+      font-weight: 600;
+    }
+    td.text-left { text-align: left; }
+
+    .role-badge {
+      padding: 4px 10px;
+      border-radius: 15px;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      display: inline-block;
+    }
+
+    .role-admin { background: rgba(255, 65, 108, 0.2); color: #ff416c; border: 1px solid #ff416c; }
+    .role-wasit { background: rgba(0, 198, 255, 0.2); color: #00c6ff; border: 1px solid #00c6ff; }
+    .role-viewer { background: rgba(148, 163, 184, 0.2); color: #94a3b8; border: 1px solid #94a3b8; }
+
+    .status-active {
+      background: rgba(56, 239, 125, 0.2);
+      color: #38ef7d;
+      padding: 4px 10px;
+      border-radius: 15px;
+      font-size: 11px;
+      font-weight: 800;
+      display: inline-block;
+    }
+
+    .status-inactive {
+      background: rgba(255, 65, 108, 0.2);
+      color: #ff416c;
+      padding: 4px 10px;
+      border-radius: 15px;
+      font-size: 11px;
+      font-weight: 800;
+      display: inline-block;
+    }
+
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 10000;
+      justify-content: center;
+      align-items: center;
+      backdrop-filter: blur(5px);
+    }
+
+    .modal-content {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 14px;
+      padding: 25px;
+      width: 90%;
+      max-width: 400px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    }
+
+    .modal-content h3 {
+      color: #ff4b2b;
+      margin-bottom: 20px;
+    }
+
+    .alert {
+      padding: 10px 15px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      font-size: 14px;
+      display: none;
+    }
+
+    .alert-success {
+      background: rgba(56, 239, 125, 0.1);
+      border: 1px solid #38ef7d;
+      color: #38ef7d;
+    }
+
+    .alert-error {
+      background: rgba(255, 65, 108, 0.1);
+      border: 1px solid #ff416c;
+      color: #ff416c;
+    }
+
+    .search-box {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+
+    .search-box .form-control {
+      flex: 1;
+    }
+
+    .pagination {
+      display: flex;
+      gap: 5px;
+      justify-content: center;
+      margin-top: 15px;
+    }
+
+    .pagination-btn {
+      background: #0f172a;
+      border: 1px solid #334155;
+      color: #94a3b8;
+      padding: 8px 12px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .pagination-btn.active {
+      background: #ff4b2b;
+      color: white;
+      border-color: #ff4b2b;
+    }
+
+    .loading {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #ff4b2b;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .copy-btn {
+      background: #0f172a;
+      border: 1px solid #334155;
+      color: #00c6ff;
+      padding: 5px 10px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 12px;
+      transition: all 0.3s;
+    }
+
+    .copy-btn:hover {
+      border-color: #00c6ff;
+      background: rgba(0, 198, 255, 0.1);
+    }
+
+    .toggle-btn {
+      background: #0f172a;
+      border: 1px solid #334155;
+      padding: 5px 10px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .toggle-btn.on {
+      background: #11998e;
+      border-color: #11998e;
+      color: white;
+    }
+
+    .toggle-btn.off {
+      background: #ff416c;
+      border-color: #ff416c;
+      color: white;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .role-select {
+      background: #0f172a;
+      border: 1px solid #334155;
+      padding: 6px 10px;
+      border-radius: 5px;
+      color: #fff;
+      font-size: 12px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Modal Edit License -->
+  <div id="editModal" class="modal-overlay" onclick="closeEditModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <h3>Edit Lisensi</h3>
+      <div class="form-group">
+        <label style="display:block; margin-bottom:8px; color:#94a3b8; font-size:12px;">KODE LISENSI</label>
+        <input type="text" id="editLicenseKey" class="form-control" style="text-transform: uppercase;" readonly>
+      </div>
+      <div class="form-group">
+        <label style="display:block; margin-bottom:8px; color:#94a3b8; font-size:12px;">ROLE</label>
+        <select id="editRole" class="form-control">
+          <option value="admin">ADMIN</option>
+          <option value="wasit">WASIT</option>
+          <option value="viewer">VIEWER</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label style="display:block; margin-bottom:8px; color:#94a3b8; font-size:12px;">STATUS</label>
+        <select id="editStatus" class="form-control">
+          <option value="active">AKTIF</option>
+          <option value="inactive">NONAKTIF</option>
+        </select>
+      </div>
+      <div style="display:flex; gap:10px; margin-top:20px;">
+        <button class="btn btn-green" style="flex:1;" onclick="saveEditLicense()">💾 SIMPAN</button>
+        <button class="btn btn-red-outline" style="flex:1;" onclick="closeEditModal()">BATAL</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Tambah License -->
+  <div id="addModal" class="modal-overlay" onclick="closeAddModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <h3>Buat Lisensi Baru</h3>
+      <div class="form-group">
+        <label style="display:block; margin-bottom:8px; color:#94a3b8; font-size:12px;">KODE LISENSI (optional, kosongkan untuk generate otomatis)</label>
+        <input type="text" id="newLicenseKey" class="form-control" placeholder="Contoh: ADMIN123" style="text-transform: uppercase;">
+      </div>
+      <div class="form-group">
+        <label style="display:block; margin-bottom:8px; color:#94a3b8; font-size:12px;">ROLE</label>
+        <select id="newRole" class="form-control">
+          <option value="admin">ADMIN</option>
+          <option value="wasit">WASIT</option>
+          <option value="viewer">VIEWER</option>
+        </select>
+      </div>
+      <button class="btn btn-green btn-full" onclick="addLicense()">➕ BUAT LISENSI</button>
+      <button class="btn btn-red-outline btn-full" style="margin-top:10px;" onclick="closeAddModal()">BATAL</button>
+    </div>
+  </div>
+
+  <!-- Main Admin Panel -->
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <div>
+        <h1>⚙️ Admin Panel - Manajemen Lisensi</h1>
+        <p style="color:#94a3b8; font-size:13px; margin-top:5px;">Kelola password dan akses pengguna aplikasi turnamen</p>
+      </div>
+      <div style="display:flex; gap:10px; align-items:center;">
+        <span class="admin-badge">👑 ADMIN</span>
+        <button class="btn btn-red-outline btn-sm" onclick="logout()">LOG OUT</button>
+      </div>
+    </div>
+
+    <!-- Statistics -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-number" id="totalLicenses">0</div>
+        <div class="stat-label">Total Lisensi</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" style="color:#38ef7d;" id="activeLicenses">0</div>
+        <div class="stat-label">Lisensi Aktif</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" style="color:#ff416c;" id="inactiveLicenses">0</div>
+        <div class="stat-label">Lisensi Nonaktif</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" style="color:#00c6ff;" id="adminCount">0</div>
+        <div class="stat-label">Admin</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" style="color:#f7b731;" id="wasitCount">0</div>
+        <div class="stat-label">Wasit</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" style="color:#94a3b8;" id="viewerCount">0</div>
+        <div class="stat-label">Viewer</div>
+      </div>
+    </div>
+
+    <!-- Alert Messages -->
+    <div id="alertSuccess" class="alert alert-success"></div>
+    <div id="alertError" class="alert alert-error"></div>
+
+    <!-- Add License Button -->
+    <div class="card">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <h2 style="margin:0;">Daftar Lisensi</h2>
+        <button class="btn btn-green" onclick="openAddModal()">➕ BUAT LISENSI</button>
+      </div>
+      
+      <!-- Search Box -->
+      <div class="search-box">
+        <input type="text" id="searchInput" class="form-control" placeholder="🔍 Cari kode lisensi atau role..." oninput="searchLicenses()">
+        <select id="filterRole" class="form-control" style="max-width:150px;" onchange="filterLicenses()">
+          <option value="">Semua Role</option>
+          <option value="admin">Admin</option>
+          <option value="wasit">Wasit</option>
+          <option value="viewer">Viewer</option>
+        </select>
+        <select id="filterStatus" class="form-control" style="max-width:150px;" onchange="filterLicenses()">
+          <option value="">Semua Status</option>
+          <option value="active">Aktif</option>
+          <option value="inactive">Nonaktif</option>
+        </select>
+      </div>
+
+      <!-- Licenses Table -->
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>No</th>
+              <th>Kode Lisensi</th>
+              <th>Role</th>
+              <th>Status</th>
+              <th>Dibuat Pada</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="licensesTableBody">
+            <tr>
+              <td colspan="6" style="text-align:center; color:#94a3b8;">
+                <div class="loading" style="margin: 20px auto;"></div>
+                Memuat data...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div class="pagination" id="pagination"></div>
+    </div>
+
+    <!-- Tools Section -->
+    <div class="card">
+      <h2>🛠️ Tools & Pengaturan</h2>
+      
+      <div class="form-row" style="margin-bottom:20px;">
+        <div class="form-group">
+          <label style="display:block; margin-bottom:8px; color:#94a3b8; font-size:12px;">GENERATE BANYAK LISENSI</label>
+          <div style="display:flex; gap:10px;">
+            <input type="number" id="bulkCount" class="form-control" placeholder="Jumlah" min="1" max="100">
+            <select id="bulkRole" class="form-control">
+              <option value="wasit">Wasit</option>
+              <option value="viewer">Viewer</option>
+            </select>
+            <button class="btn btn-blue" onclick="bulkGenerate()">⚡ GENERATE</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label style="display:block; margin-bottom:8px; color:#94a3b8; font-size:12px;">EXPORT DATA LISENSI</label>
+          <button class="btn btn-yellow btn-full" onclick="exportLicenses()">📥 EXPORT JSON</button>
+        </div>
+        <div class="form-group">
+          <label style="display:block; margin-bottom:8px; color:#94a3b8; font-size:12px;">IMPORT DATA LISENSI</label>
+          <label class="btn btn-blue btn-full" style="cursor:pointer;">
+            📤 IMPORT JSON
+            <input type="file" id="importFile" accept=".json" style="display:none;" onchange="importLicenses(event)">
+          </label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+  <script>
+    // Firebase Configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyCMvemJT1b6fy5D_s8Hl9WOwXZmsZ096jE",
+      authDomain: "drawing-match-ac69a.firebaseapp.com",
+      databaseURL: "https://turnamen-badminton-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "drawing-match-ac69a",
+      storageBucket: "drawing-match-ac69a.firebasestorage.app",
+      messagingSenderId: "22800670068",
+      appId: "1:22800670068:web:6bc373b99331c8e0bca021"
+    };
+
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // State
+    let allLicenses = [];
+    let filteredLicenses = [];
+    let currentPage = 1;
+    const itemsPerPage = 10;
+    let editingLicenseKey = '';
+
+    // Initialization
+    window.addEventListener('DOMContentLoaded', () => {
+      loadLicenses();
+      checkAdminSession();
+    });
+
+    // Check admin session
+    function checkAdminSession() {
+      const adminSession = sessionStorage.getItem('admin_logged_in');
+      if (!adminSession) {
+        // Redirect to login if not logged in as admin
+        const adminPassword = prompt("Masukkan password admin (WAJIB):");
+        if (adminPassword === "ADMINPASS123") {
+          sessionStorage.setItem('admin_logged_in', 'true');
+        } else {
+          alert("Password admin salah!");
+          window.location.href = "index.html"; // Redirect back to main app
+        }
+      }
+    }
+
+    // Logout function
+    function logout() {
+      sessionStorage.removeItem('admin_logged_in');
+      window.location.href = "index.html";
+    }
+
+    // Load all licenses from Firebase
+    function loadLicenses() {
+      db.ref('licenses').on('value', (snapshot) => {
+        if (snapshot.exists()) {
+          allLicenses = Object.entries(snapshot.val()).map(([key, value]) => ({
+            key: key,
+            role: value.role || 'viewer',
+            status: value.status || 'active',
+            createdAt: value.createdAt || Date.now()
+          }));
+        } else {
+          allLicenses = [];
+        }
+        
+        // Sort by createdAt (newest first)
+        allLicenses.sort((a, b) => b.createdAt - a.createdAt);
+        
+        updateStats();
+        applyFilters();
+      }, (error) => {
+        showAlert('error', 'Gagal memuat data: ' + error.message);
+      });
+    }
+
+    // Update statistics
+    function updateStats() {
+      document.getElementById('totalLicenses').textContent = allLicenses.length;
+      document.getElementById('activeLicenses').textContent = allLicenses.filter(l => l.status === 'active').length;
+      document.getElementById('inactiveLicenses').textContent = allLicenses.filter(l => l.status === 'inactive').length;
+      document.getElementById('adminCount').textContent = allLicenses.filter(l => l.role === 'admin').length;
+      document.getElementById('wasitCount').textContent = allLicenses.filter(l => l.role === 'wasit').length;
+      document.getElementById('viewerCount').textContent = allLicenses.filter(l => l.role === 'viewer').length;
+    }
+
+    // Apply search and filter
+    function applyFilters() {
+      const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+      const roleFilter = document.getElementById('filterRole').value;
+      const statusFilter = document.getElementById('filterStatus').value;
+
+      filteredLicenses = allLicenses.filter(license => {
+        const matchesSearch = license.key.toLowerCase().includes(searchTerm);
+        const matchesRole = !roleFilter || license.role === roleFilter;
+        const matchesStatus = !statusFilter || license.status === statusFilter;
+        return matchesSearch && matchesRole && matchesStatus;
+      });
+
+      currentPage = 1;
+      renderTable();
+    }
+
+    // Render license table
+    function renderTable() {
+      const startIndex = (currentPage - 1) * itemsPerPage;
+      const endIndex = Math.min(startIndex + itemsPerPage, filteredLicenses.length);
+      const pageLicenses = filteredLicenses.slice(startIndex, endIndex);
+
+      const tbody = document.getElementById('licensesTableBody');
+      
+      if (pageLicenses.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#94a3b8; padding:30px;">Tidak ada data lisensi ditemukan</td></tr>`;
+      } else {
+        tbody.innerHTML = pageLicenses.map((license, index) => {
+          const no = startIndex + index + 1;
+          const roleClass = `role-${license.role}`;
+          const roleLabel = license.role.toUpperCase();
+          const statusClass = license.status === 'active' ? 'status-active' : 'status-inactive';
+          const statusLabel = license.status === 'active' ? '✓ AKTIF' : '✗ NONAKTIF';
+          const createdDate = new Date(license.createdAt).toLocaleDateString('id-ID', {
+            day: '2-digit', month: '2-digit', year: 'numeric'
+          });
+
+          return `
+            <tr>
+              <td>${no}</td>
+              <td>
+                <div style="display:flex; align-items:center; gap:8px; justify-content:center;">
+                  <strong style="color:#fff; letter-spacing:1px;">${license.key}</strong>
+                  <button class="copy-btn" onclick="copyLicense('${license.key}')">📋 Copy</button>
+                </div>
+              </td>
+              <td>
+                <span class="role-badge ${roleClass}">${roleLabel}</span>
+              </td>
+              <td>
+                <span class="${statusClass}">${statusLabel}</span>
+              </td>
+              <td>${createdDate}</td>
+              <td>
+                <div class="action-buttons">
+                  <button class="btn btn-blue btn-sm" onclick="openEditModal('${license.key}')">✏️ Edit</button>
+                  <button class="btn ${license.status === 'active' ? 'btn-red-outline' : 'btn-green'} btn-sm" onclick="toggleStatus('${license.key}')">
+                    ${license.status === 'active' ? '🔴 Nonaktifkan' : '🟢 Aktifkan'}
+                  </button>
+                  <button class="btn btn-red btn-sm" onclick="deleteLicense('${license.key}')">🗑️ Hapus</button>
+                </div>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      renderPagination();
+    }
+
+    // Render pagination
+    function renderPagination() {
+      const totalPages = Math.ceil(filteredLicenses.length / itemsPerPage);
+      const pagination = document.getElementById('pagination');
+      
+      if (totalPages <= 1) {
+        pagination.innerHTML = '';
+        return;
+      }
+
+      let paginationHtml = '';
+      
+      // Previous button
+      paginationHtml += `<button class="pagination-btn" onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>◀</button>`;
+      
+      // Page numbers
+      for (let i = 1; i <= totalPages; i++) {
+        paginationHtml += `<button class="pagination-btn ${currentPage === i ? 'active' : ''}" onclick="changePage(${i})">${i}</button>`;
+      }
+      
+      // Next button
+      paginationHtml += `<button class="pagination-btn" onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>▶</button>`;
+      
+      pagination.innerHTML = paginationHtml;
+    }
+
+    // Change page
+    function changePage(page) {
+      const totalPages = Math.ceil(filteredLicenses.length / itemsPerPage);
+      if (page < 1 || page > totalPages) return;
+      currentPage = page;
+      renderTable();
+    }
+
+    // Search and filter
+    function searchLicenses() {
+      applyFilters();
+    }
+
+    function filterLicenses() {
+      applyFilters();
+    }
+
+    // Copy license key
+    function copyLicense(key) {
+      navigator.clipboard.writeText(key).then(() => {
+        showAlert('success', `Kode lisensi ${key} berhasil disalin!`);
+      });
+    }
+
+    // Toggle status
+    function toggleStatus(key) {
+      const license = allLicenses.find(l => l.key === key);
+      if (!license) return;
+
+      const newStatus = license.status === 'active' ? 'inactive' : 'active';
+      
+      if (confirm(`Apakah Anda yakin ingin ${newStatus === 'active' ? 'mengaktifkan' : 'menonaktifkan'} lisensi ${key}?`)) {
+        db.ref('licenses/' + key).update({
+          status: newStatus
+        }).then(() => {
+          showAlert('success', `Lisensi ${key} berhasil ${newStatus === 'active' ? 'diaktifkan' : 'dinonaktifkan'}`);
+        }).catch(error => {
+          showAlert('error', 'Gagal update status: ' + error.message);
+        });
+      }
+    }
+
+    // Delete license
+    function deleteLicense(key) {
+      if (confirm(`Apakah Anda yakin ingin menghapus lisensi ${key} secara permanen?`)) {
+        db.ref('licenses/' + key).remove().then(() => {
+          showAlert('success', `Lisensi ${key} berhasil dihapus`);
+        }).catch(error => {
+          showAlert('error', 'Gagal menghapus: ' + error.message);
+        });
+      }
+    }
+
+    // Open edit modal
+    function openEditModal(key) {
+      const license = allLicenses.find(l => l.key === key);
+      if (!license) return;
+
+      editingLicenseKey = key;
+      document.getElementById('editLicenseKey').value = key;
+      document.getElementById('editRole').value = license.role;
+      document.getElementById('editStatus').value = license.status;
+      document.getElementById('editModal').style.display = 'flex';
+    }
+
+    // Close edit modal
+    function closeEditModal(event) {
+      if (event && event.target !== event.currentTarget) return;
+      document.getElementById('editModal').style.display = 'none';
+    }
+
+    // Save edit license
+    function saveEditLicense() {
+      const role = document.getElementById('editRole').value;
+      const status = document.getElementById('editStatus').value;
+
+      db.ref('licenses/' + editingLicenseKey).update({
+        role: role,
+        status: status
+      }).then(() => {
+        showAlert('success', 'Lisensi berhasil diupdate!');
+        closeEditModal();
+      }).catch(error => {
+        showAlert('error', 'Gagal update: ' + error.message);
+      });
+    }
+
+    // Open add modal
+    function openAddModal() {
+      document.getElementById('newLicenseKey').value = '';
+      document.getElementById('newRole').value = 'wasit';
+      document.getElementById('addModal').style.display = 'flex';
+    }
+
+    // Close add modal
+    function closeAddModal(event) {
+      if (event && event.target !== event.currentTarget) return;
+      document.getElementById('addModal').style.display = 'none';
+    }
+
+    // Add new license
+    function addLicense() {
+      let licenseKey = document.getElementById('newLicenseKey').value.trim().toUpperCase();
+      const role = document.getElementById('newRole').value;
+
+      // If no key provided, generate random one
+      if (!licenseKey) {
+        licenseKey = generateLicenseKey();
+      }
+
+      // Check if key already exists
+      if (allLicenses.some(l => l.key === licenseKey)) {
+        showAlert('error', `Kode lisensi ${licenseKey} sudah digunakan!`);
+        return;
+      }
+
+      db.ref('licenses/' + licenseKey).set({
+        role: role,
+        status: 'active',
+        createdAt: Date.now()
+      }).then(() => {
+        showAlert('success', `Lisensi ${licenseKey} berhasil dibuat dengan role ${role.toUpperCase()}`);
+        closeAddModal();
+      }).catch(error => {
+        showAlert('error', 'Gagal membuat lisensi: ' + error.message);
+      });
+    }
+
+    // Generate random license key
+    function generateLicenseKey() {
+      const prefix = 'LS-';
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+      let result = prefix;
+      for (let i = 0; i < 6; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return result;
+    }
+
+    // Bulk generate licenses
+    function bulkGenerate() {
+      const count = parseInt(document.getElementById('bulkCount').value) || 10;
+      const role = document.getElementById('bulkRole').value;
+
+      if (count < 1 || count > 100) {
+        showAlert('error', 'Jumlah harus antara 1-100!');
+        return;
+      }
+
+      if (confirm(`Generate ${count} lisensi dengan role ${role.toUpperCase()}?`)) {
+        const updates = {};
+        let generatedCount = 0;
+
+        for (let i = 0; i < count; i++) {
+          let key = generateLicenseKey();
+          // Ensure unique
+          while (allLicenses.some(l => l.key === key)) {
+            key = generateLicenseKey();
+          }
+          updates[key] = {
+            role: role,
+            status: 'active',
+            createdAt: Date.now()
+          };
+          generatedCount++;
+        }
+
+        db.ref('licenses').update(updates).then(() => {
+          showAlert('success', `Berhasil membuat ${generatedCount} lisensi baru!`);
+          document.getElementById('bulkCount').value = '';
+        }).catch(error => {
+          showAlert('error', 'Gagal generate: ' + error.message);
+        });
+      }
+    }
+
+    // Export licenses to JSON
+    function exportLicenses() {
+      const exportData = {
+        exportedAt: new Date().toISOString(),
+        licenses: allLicenses.map(l => ({
+          key: l.key,
+          role: l.role,
+          status: l.status,
+          createdAt: l.createdAt
+        }))
+      };
+
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportData, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `lisensi_backup_${Date.now()}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    }
+
+    // Import licenses from JSON
+    function importLicenses(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const importData = JSON.parse(e.target.result);
+          
+          if (!importData.licenses || !Array.isArray(importData.licenses)) {
+            showAlert('error', 'Format file JSON tidak valid!');
+            return;
+          }
+
+          if (confirm(`Import ${importData.licenses.length} lisensi dari file?`)) {
+            const updates = {};
+            
+            importData.licenses.forEach(license => {
+              if (license.key) {
+                updates[license.key] = {
+                  role: license.role || 'viewer',
+                  status: license.status || 'active',
+                  createdAt: license.createdAt || Date.now()
+                };
+              }
+            });
+
+            db.ref('licenses').update(updates).then(() => {
+              showAlert('success', `Berhasil import ${Object.keys(updates).length} lisensi!`);
+            }).catch(error => {
+              showAlert('error', 'Gagal import: ' + error.message);
+            });
+          }
+        } catch (err) {
+          showAlert('error', 'File JSON tidak valid!');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    // Show alert
+    function showAlert(type, message) {
+      const successAlert = document.getElementById('alertSuccess');
+      const errorAlert = document.getElementById('alertError');
+
+      if (type === 'success') {
+        successAlert.textContent = message;
+        successAlert.style.display = 'block';
+        errorAlert.style.display = 'none';
+      } else {
+        errorAlert.textContent = message;
+        errorAlert.style.display = 'block';
+        successAlert.style.display = 'none';
+      }
+
+      // Auto hide after 3 seconds
+      setTimeout(() => {
+        successAlert.style.display = 'none';
+        errorAlert.style.display = 'none';
+      }, 3000);
+    }
+
+    // Close modals on ESC key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeEditModal();
+        closeAddModal();
+      }
+    });
+  </script>
+</body>
+          </html>
