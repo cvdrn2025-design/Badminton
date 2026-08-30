@@ -190,7 +190,9 @@
 
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  
   <script>
+    // KONFIGURASI FIREBASE (Pastikan URL database benar)
     const firebaseConfig = {
       apiKey: "AIzaSyCMvemJT1b6fy5D_s8Hl9WOwXZmsZ096jE",
       authDomain: "drawing-match-ac69a.firebaseapp.com",
@@ -201,9 +203,11 @@
       appId: "1:22800670068:web:6bc373b99331c8e0bca021"
     };
 
+    // Inisialisasi Firebase
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
+    // Variabel Global
     let semuaData = [];
     let currentEdit = '';
 
@@ -223,25 +227,32 @@
       window.location.href = "index.html";
     }
 
-    // Load data
-    db.ref('licenses').on('value', snap => {
-      jikaAda(snap) {
+    // Load data dari Firebase (Realtime)
+    db.ref('licenses').on('value', (snap) => {
+      if (snap.exists()) {
         semuaData = Object.entries(snap.val()).map(([key, val]) => ({
-          key, role: val.role || 'viewer', status: val.status || 'active'
+          key: key, 
+          role: val.role || 'viewer', 
+          status: val.status || 'active'
         }));
       } else {
         semuaData = [];
       }
       updateStatistik();
       tampilkan();
+    }, (error) => {
+      console.error("Error loading data:", error);
+      alert("Gagal terhubung ke Firebase: " + error.message);
     });
 
+    // Update Statistik
     function updateStatistik() {
       document.getElementById('total').textContent = semuaData.length;
       document.getElementById('aktif').textContent = semuaData.filter(d => d.status === 'active').length;
       document.getElementById('nonaktif').textContent = semuaData.filter(d => d.status === 'inactive').length;
     }
 
+    // Tampilkan Tabel
     function tampilkan() {
       const cari = document.getElementById('search').value.toLowerCase();
       const hasil = semuaData.filter(d => d.key.toLowerCase().includes(cari));
@@ -272,7 +283,7 @@
     function openModal(id) { document.getElementById(id).style.display = 'flex'; }
     function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
-    // Tambah
+    // Tambah Password
     function addLicense() {
       let key = document.getElementById('newKey').value.trim().toUpperCase();
       const role = document.getElementById('newRole').value;
@@ -280,22 +291,28 @@
       if (!key) key = 'PW-' + Math.random().toString(36).substr(2, 6).toUpperCase();
       
       if (semuaData.some(d => d.key === key)) {
-        alert('Kode sudah ada!');
+        showAlert('error', 'Kode sudah ada!');
         return;
       }
 
       db.ref('licenses/' + key).set({
-        role, status: 'active', createdAt: Date.now()
+        role: role, 
+        status: 'active', 
+        createdAt: Date.now()
       }).then(() => {
         closeModal('addModal');
         document.getElementById('newKey').value = '';
-        alert('Password berhasil dibuat!');
+        showAlert('success', 'Password berhasil dibuat!');
+      }).catch(error => {
+        showAlert('error', 'Gagal: ' + error.message);
       });
     }
 
-    // Edit
+    // Edit Password
     function edit(key) {
       const data = semuaData.find(d => d.key === key);
+      if (!data) return;
+      
       currentEdit = key;
       document.getElementById('editKey').value = key;
       document.getElementById('editRole').value = data.role;
@@ -309,25 +326,45 @@
         status: document.getElementById('editStatus').value
       }).then(() => {
         closeModal('editModal');
-        alert('Berhasil diupdate!');
+        showAlert('success', 'Berhasil diupdate!');
+      }).catch(error => {
+        showAlert('error', 'Gagal: ' + error.message);
       });
     }
 
-    // Toggle status
+    // Toggle Status
     function toggle(key) {
       const data = semuaData.find(d => d.key === key);
+      if (!data) return;
+      
       const newStatus = data.status === 'active' ? 'inactive' : 'active';
       
       if (confirm('Ubah status menjadi ' + (newStatus === 'active' ? 'AKTIF' : 'NONAKTIF') + '?')) {
-        db.ref('licenses/' + key).update({ status: newStatus });
+        db.ref('licenses/' + key).update({ status: newStatus })
+          .then(() => showAlert('success', 'Status berhasil diubah!'))
+          .catch(error => showAlert('error', 'Gagal: ' + error.message));
       }
     }
 
-    // Hapus
+    // Hapus Password
     function hapus(key) {
       if (confirm('Hapus password ' + key + '?')) {
-        db.ref('licenses/' + key).remove();
+        db.ref('licenses/' + key).remove()
+          .then(() => showAlert('success', 'Password berhasil dihapus!'))
+          .catch(error => showAlert('error', 'Gagal: ' + error.message));
       }
+    }
+
+    // Alert Helper
+    function showAlert(type, message) {
+      const alertDiv = document.getElementById('alert');
+      alertDiv.className = 'alert alert-' + type;
+      alertDiv.textContent = message;
+      alertDiv.style.display = 'block';
+      
+      setTimeout(() => {
+        alertDiv.style.display = 'none';
+      }, 3000);
     }
   </script>
 </body>
